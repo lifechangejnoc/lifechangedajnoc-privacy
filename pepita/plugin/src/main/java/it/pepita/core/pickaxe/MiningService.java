@@ -273,7 +273,7 @@ public final class MiningService implements Listener {
             }
             if (d.active("collasso") > 0 && roll(d, Enchant.COLLASSO)) {
                 collapse(b.getWorld(), m, h);
-                Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<" + Txt.QUANTUM + "><b>COLLASSO!</b></" + Txt.QUANTUM + "> <white>" + Txt.esc(p.getName())
+                Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<" + Txt.QUANTUM + "><b>COLLASSO!</b></" + Txt.QUANTUM + "> <white>" + Txt.esc(p.getName())
                         + "</white> ha fatto crollare la <white>" + m.name + "</white>!"));
                 h.procs++;
             }
@@ -319,7 +319,7 @@ public final class MiningService implements Listener {
                 PlayerData od = plugin.data().get(o);
                 plugin.eco().give(od, Economy.Cur.SOLDI, plugin.eco().minutes(od, 1), "beneficenza");
             }
-            Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<#6BE36B>Beneficenza!</#6BE36B> <white>" + Txt.esc(p.getName())
+            Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<#6BE36B>Beneficenza!</#6BE36B> <white>" + Txt.esc(p.getName())
                     + "</white> ha regalato un minuto di scavo a tutti i detenuti!"));
             h.procs++;
         }
@@ -327,7 +327,7 @@ public final class MiningService implements Listener {
         if (bd > 0 && roll(d, Enchant.BENEDIZIONE)) {
             double gift = 25.0 * bd;
             for (Player o : Bukkit.getOnlinePlayers()) plugin.eco().give(plugin.data().get(o), Economy.Cur.PEPITE, gift, "benedizione");
-            Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<" + Txt.PEPITE + ">Benedizione!</" + Txt.PEPITE + "> <white>"
+            Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<" + Txt.PEPITE + ">Benedizione!</" + Txt.PEPITE + "> <white>"
                     + Txt.esc(p.getName()) + "</white> ha donato " + Txt.pepite(gift) + " <gray>a tutti!"));
             h.procs++;
         }
@@ -406,7 +406,7 @@ public final class MiningService implements Listener {
                 box(w, m, m.minX, m.minY, m.minZ, m.maxX, m.maxY, m.maxZ, h);
                 w.spawnParticle(Particle.EXPLOSION_EMITTER, fx, 5, 5, 3, 5, 0);
                 w.playSound(fx, Sound.ENTITY_GENERIC_EXPLODE, 2f, 0.5f);
-                Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<red><b>☢ NUKE!</b></red> <white>" + Txt.esc(p.getName())
+                Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<red><b>☢ NUKE!</b></red> <white>" + Txt.esc(p.getName())
                         + "</white> ha raso al suolo la <white>" + m.name + "</white>!"));
                 plugin.mines().queueReset(m);
             }
@@ -499,7 +499,7 @@ public final class MiningService implements Listener {
                     Txt.mm("<gray>Hai trovato la pepita leggendaria!"),
                     Title.Times.times(Duration.ofMillis(200), Duration.ofMillis(2500), Duration.ofMillis(500))));
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1.4f);
-            Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName())
+            Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName())
                     + "</white> ha trovato una <gradient:#FFF6B7:#FFA726><b>PEPITA D'ORO</b></gradient>!"));
         }
     }

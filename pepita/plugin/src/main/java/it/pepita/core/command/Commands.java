@@ -47,6 +47,10 @@ public final class Commands implements TabExecutor {
         Player p = player(s);
         if (p == null) return true;
         PlayerData d = plugin.data().get(p);
+        if (plugin.lobby().blocks(p, name)) {
+            Txt.send(p, "Sei nella <white>lobby</white>: questo comando funziona nel <gold>Prison</gold>. Entra con la <yellow>bussola</yellow> o <yellow>/prigione</yellow>.");
+            return true;
+        }
         switch (name) {
             case "menu" -> plugin.menus().main(p);
             case "miniere" -> {
@@ -62,11 +66,21 @@ public final class Commands implements TabExecutor {
                 if (m == null) Txt.send(p, "Miniera non trovata.");
                 else plugin.mines().teleport(p, m);
             }
-            case "spawn" -> plugin.menus().travel(p, "hub");
-            case "prigione" -> plugin.menus().travel(p, "prigione");
+            case "spawn" -> {
+                // /hub e /lobby portano sempre alla lobby; /spawn nel prison riporta al cortile
+                boolean toLobby = !label.equalsIgnoreCase("spawn") || plugin.lobby().in(p) || !plugin.world().managed(p.getWorld());
+                plugin.menus().travel(p, toLobby ? "hub" : "prigione");
+            }
+            case "prigione" -> {
+                if (plugin.lobby().in(p)) plugin.lobby().enterPrisonMode(p);
+                else plugin.menus().travel(p, "prigione");
+            }
             case "pvp" -> plugin.menus().travel(p, "pvp");
             case "cella" -> plugin.cells().command(p, a);
-            case "selettore" -> plugin.menus().selector(p);
+            case "selettore" -> {
+                if (plugin.lobby().in(p)) plugin.lobby().openModes(p);
+                else plugin.menus().selector(p);
+            }
             case "tutorial" -> {
                 String sub = a.length > 0 ? a[0].toLowerCase(Locale.ROOT) : "";
                 switch (sub) {
@@ -208,7 +222,8 @@ public final class Commands implements TabExecutor {
                 {"/incantesimi", "potenzia il piccone"}, {"/casse", "apri le casse"}, {"/negozio", "negozio gemme"},
                 {"/skin", "skin di piccone e armatura"}, {"/giornaliero", "premio ogni 24h"}, {"/gang", "crea o entra in una gang"},
                 {"/paga  /pepite paga", "dai soldi o pepite (tassa 5%)"}, {"/top", "classifiche"}, {"/fly", "vola (VIP+ o incantesimo)"},
-                {"/piccone", "riprendi piccone, bussola e corazza"}, {"/hub  /prigione  /pvp", "viaggia"}, {"/selettore", "menu dei viaggi"},
+                {"/piccone", "riprendi piccone, bussola e corazza"}, {"/lobby  /hub", "torna alla lobby"}, {"/spawn", "nel prison: torna al cortile"},
+                {"/prigione  /pvp", "viaggia nel prison"}, {"/selettore", "modalità (lobby) o viaggi (prison)"},
                 {"/cella", "le celle del colosseo"}, {"/battlepass", "missioni e premi"}, {"/traguardi", "premi per i blocchi rotti"},
                 {"/corazza", "potenzia la corazza con i Quantum"}, {"/tier", "potenzia il piccone"}, {"/quantum", "i tuoi Quantum"},
                 {"/tutorial", "il tutorial di Beppe"}, {"/keyall", "quando arriva il prossimo keyall"}};
@@ -235,6 +250,7 @@ public final class Commands implements TabExecutor {
             Txt.raw(s, "<yellow>/pa ologrammi   /pa salva   /pa render [spawn|miniera]   /pa economia   /pa keyall");
             Txt.raw(s, "<yellow>/pa tier <giocatore> <0-7>   /pa corazza <giocatore> <0-3> <livello>   /pa battlepass <giocatore> <xp|premium>");
             Txt.raw(s, "<yellow>/pa tutorial <giocatore> [reset]   /pa cella libera <piano> <settore>   /pa cella reset <piano> <settore>");
+            Txt.raw(s, "<yellow>/pa lobby <spawn|npc|info>   (spawn/npc: mettiti nel punto e guarda nella direzione voluta)");
             Txt.raw(s, "<yellow>/pa info <giocatore>   /pa reload");
             return true;
         }
@@ -450,6 +466,27 @@ public final class Commands implements TabExecutor {
                 java.io.File out = plugin.renderer().render(what);
                 Txt.send(s, "Render salvato in " + out.getPath());
             }
+            case "lobby" -> {
+                String what = a.length > 1 ? a[1].toLowerCase(Locale.ROOT) : "info";
+                it.pepita.core.world.LobbyMap lm = plugin.world().lobbyMap();
+                if (what.equals("spawn") || what.equals("npc")) {
+                    if (!(s instanceof Player op) || !plugin.world().isHub(op.getWorld())) {
+                        Txt.send(s, "Entra nella lobby e mettiti nel punto giusto, poi ripeti il comando.");
+                        return true;
+                    }
+                    lm.setPoint(what, op.getLocation());
+                    if (what.equals("spawn")) plugin.world().hub().setSpawnLocation(plugin.world().hubSpawn());
+                    else plugin.holograms().spawnAll();
+                    Txt.send(s, (what.equals("spawn") ? "Spawn della lobby" : "Secondino del Prison") + " impostato qui.");
+                } else {
+                    double[] sp = lm.spawn(), np = lm.npc();
+                    Txt.raw(s, "<gold>Lobby</gold> <gray>mappa: <white>" + (lm.active() ? plugin.getConfig().getString("lobby.mappa") : "quella del plugin")
+                            + "</white> • spawn <white>" + Fmt.num(sp[0]) + " " + Fmt.num(sp[1]) + " " + Fmt.num(sp[2])
+                            + "</white> • npc <white>" + Fmt.num(np[0]) + " " + Fmt.num(np[1]) + " " + Fmt.num(np[2])
+                            + "</white> • vuoto sotto y=<white>" + lm.voidY() + "</white> • nel Prison: <white>" + plugin.lobby().prisonPlayers());
+                    Txt.raw(s, "<gray>Cartella del mondo: <white>" + plugin.world().hub().getWorldPath().toAbsolutePath());
+                }
+            }
             case "info" -> {
                 if (a.length < 2) return true;
                 PlayerData t = plugin.data().getAny(a[1]);
@@ -510,10 +547,11 @@ public final class Commands implements TabExecutor {
                 if (!s.hasPermission("pepita.admin")) return List.of();
                 if (a.length == 1) out.addAll(List.of("dai", "togli", "chiave", "vip", "rank", "prestigio", "incantesimo", "skin", "oggetto",
                         "booster", "corsa", "reset", "ricostruisci", "ologrammi", "salva", "render", "info", "reload", "economia", "keyall",
-                        "tier", "corazza", "battlepass", "tutorial", "cella"));
+                        "tier", "corazza", "battlepass", "tutorial", "cella", "lobby"));
+                else if (a.length == 2 && a[0].equalsIgnoreCase("lobby")) out.addAll(List.of("spawn", "npc", "info"));
                 else if (a.length == 2 && a[0].equalsIgnoreCase("ricostruisci")) out.addAll(List.of("hub", "prigione", "miniere", "pvp", "celle", "tutti"));
                 else if (a.length == 2 && a[0].equalsIgnoreCase("cella")) out.addAll(List.of("libera", "reset"));
-                else if (a.length == 2 && !List.of("booster", "corsa", "reset", "ricostruisci", "ologrammi", "salva", "render", "reload", "economia", "keyall").contains(a[0].toLowerCase()))
+                else if (a.length == 2 && !List.of("booster", "corsa", "reset", "ricostruisci", "ologrammi", "salva", "render", "reload", "economia", "keyall", "lobby").contains(a[0].toLowerCase()))
                     return null;
                 else if (a.length == 2 && a[0].equalsIgnoreCase("reset")) {
                     out.add("tutte");

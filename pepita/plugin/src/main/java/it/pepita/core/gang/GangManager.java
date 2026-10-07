@@ -84,7 +84,7 @@ public final class GangManager {
                 d.gang = name;
                 d.dirty = true;
                 dirty = true;
-                Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> ha fondato la gang <#FF7B7B>" + name + "</#FF7B7B>!"));
+                Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> ha fondato la gang <#FF7B7B>" + name + "</#FF7B7B>!"));
             }
             case "invita" -> {
                 Gang g = get(d.gang);

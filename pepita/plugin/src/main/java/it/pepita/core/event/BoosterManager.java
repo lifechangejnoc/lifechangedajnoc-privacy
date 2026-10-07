@@ -53,7 +53,7 @@ public final class BoosterManager {
         }
         by = who;
         save();
-        Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<gold><b>BOOSTER GLOBALE!</b></gold> <white>" + Txt.esc(who)
+        Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<gold><b>BOOSTER GLOBALE!</b></gold> <white>" + Txt.esc(who)
                 + "</white> ha attivato soldi <gold>x" + Fmt.num(mult) + "</gold> per tutti! <gray>(" + Fmt.time(seconds) + ")"));
         for (Player p : Bukkit.getOnlinePlayers()) p.playSound(p.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.8f, 1.2f);
     }
@@ -66,13 +66,19 @@ public final class BoosterManager {
             bar.name(Txt.mm("<gold><b>Booster globale x" + Fmt.num(mult) + "</b></gold> <gray>di <white>" + Txt.esc(by)
                     + "</white> • <yellow>" + Fmt.time(left)));
             bar.progress(prog);
-            for (Player p : Bukkit.getOnlinePlayers()) p.showBossBar(bar);
+            for (Player p : Bukkit.getOnlinePlayers()) refresh(p);
         } else if (mult != 1) {
             mult = 1;
             save();
             for (Player p : Bukkit.getOnlinePlayers()) p.hideBossBar(bar);
-            Bukkit.broadcast(Txt.mm(Txt.PREFIX + "Il booster globale è terminato."));
+            Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "Il booster globale è terminato."));
         }
+    }
+
+    /** La bossbar si vede solo nel prison, non nella lobby. */
+    public void refresh(Player p) {
+        if (until > System.currentTimeMillis() && !plugin.lobby().in(p)) p.showBossBar(bar);
+        else p.hideBossBar(bar);
     }
 
     public void hideAll() {

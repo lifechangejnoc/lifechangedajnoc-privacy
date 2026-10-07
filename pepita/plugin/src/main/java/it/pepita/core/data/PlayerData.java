@@ -56,6 +56,12 @@ public final class PlayerData {
     public final String[] armorSkinPieces = {"galeotto", "galeotto", "galeotto", "galeotto"};
     /** Le skin della corazza possedute (v1, set interi) sono già state trasformate in add-on. */
     public boolean armorSkinMigrate;
+    /** Il giocatore è nella lobby: il suo inventario del prison è salvato in prisonInv. */
+    public boolean inLobby;
+    /** Inventario del prison (Base64 di ItemStack.serializeItemsAsBytes) mentre si è nella lobby. */
+    public String prisonInv;
+    /** Copia di un inventario del prison che non si è riusciti a ripristinare (da recuperare a mano). */
+    public String prisonInvBackup;
 
     // Casse (chiavi virtuali)
     public final Map<String, Integer> keys = new HashMap<>();
@@ -180,6 +186,9 @@ public final class PlayerData {
         List<String> pieces = y.getStringList("armatura.skin-pezzi");
         for (int i = 0; i < 4 && i < pieces.size(); i++) if (pieces.get(i) != null) armorSkinPieces[i] = pieces.get(i);
         armorSkinMigrate = y.getBoolean("armatura.skin-migrate");
+        inLobby = y.getBoolean("lobby.attiva");
+        prisonInv = y.getString("lobby.inventario-prison");
+        prisonInvBackup = y.getString("lobby.inventario-prison-backup");
         luckyTrovati = y.getLong("lucky-trovati");
         tutorialStep = y.getInt("tutorial.passo", -1);
         tutorialCount = y.getInt("tutorial.contatore");
@@ -244,6 +253,9 @@ public final class PlayerData {
         y.set("armatura.livelli.stivali", armorLevels[3]);
         y.set("armatura.skin-pezzi", List.of(armorSkinPieces));
         y.set("armatura.skin-migrate", armorSkinMigrate);
+        y.set("lobby.attiva", inLobby);
+        y.set("lobby.inventario-prison", prisonInv);
+        y.set("lobby.inventario-prison-backup", prisonInvBackup);
         y.set("lucky-trovati", luckyTrovati);
         y.set("tutorial.passo", tutorialStep);
         y.set("tutorial.contatore", tutorialCount);

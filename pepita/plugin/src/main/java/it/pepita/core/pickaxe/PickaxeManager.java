@@ -479,6 +479,8 @@ public final class PickaxeManager {
 
     /** Ridà al giocatore piccone, bussola, menu e corazza se mancano. */
     public void ensureKit(Player p) {
+        // nella lobby niente del prison: lì c'è solo la bussola delle modalità
+        if (plugin.lobby().in(p)) return;
         PlayerData d = plugin.data().get(p);
         if (d.pickTier < 0) {
             // giocatori della versione vecchia avevano già il piccone di diamante
@@ -513,6 +515,7 @@ public final class PickaxeManager {
 
     /** Indossa la corazza con la skin add-on di ogni pezzo (sostituisce solo i pezzi della corazza o slot vuoti). */
     public void applyArmor(Player p, PlayerData d) {
+        if (plugin.lobby().in(p)) return;
         boolean pack = d.hasPack;
         PlayerInventory inv = p.getInventory();
         if (isEmpty(inv.getHelmet()) || ItemBuilder.is(inv.getHelmet(), ARMOR)) inv.setHelmet(armorPiece(EquipmentSlot.HEAD, ArmorService.skinOn(d, 0), pack, d));

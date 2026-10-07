@@ -45,6 +45,14 @@ public final class Txt {
         return out;
     }
 
+    /** Messaggio per chi gioca al Prison (non arriva a chi è nella lobby) e per la console. */
+    public static void broadcastPrison(Component c) {
+        it.pepita.core.PepitaCore pl = it.pepita.core.PepitaCore.get();
+        for (org.bukkit.entity.Player p : org.bukkit.Bukkit.getOnlinePlayers())
+            if (pl == null || pl.lobby() == null || !pl.lobby().in(p)) p.sendMessage(c);
+        org.bukkit.Bukkit.getConsoleSender().sendMessage(c);
+    }
+
     public static void send(CommandSender s, String msg) {
         s.sendMessage(mm(PREFIX + msg));
     }

@@ -48,7 +48,9 @@ public final class PlanTool {
             opt.put(kv[0], kv.length > 1 ? kv[1] : "1");
         }
         long t0 = System.currentTimeMillis();
-        BuildPlan p = Builds.plan(name);
+        // "file:<percorso>": blocchi letti da un file nel formato di BuildPlan.export (es. una mappa esterna)
+        BuildPlan p = name.startsWith("file:") ? load(new File(name.substring(5))) : Builds.plan(name);
+        if (name.startsWith("file:")) name = "file:" + new File(name.substring(5)).getName().replaceAll("\\.[^.]*$", "");
         long t1 = System.currentTimeMillis();
         String tag = name.replace(':', '_');
         System.out.println(tag + ": " + p.size() + " blocchi, calcolato in " + (t1 - t0) + " ms");
@@ -194,6 +196,15 @@ public final class PlanTool {
         if (!d.startsWith(prefix)) err(what + ": atteso " + prefix + " in " + x + "," + y + "," + z + " ma c'è " + d);
     }
 
+    static BuildPlan load(File f) throws java.io.IOException {
+        BuildPlan p = new BuildPlan();
+        for (String line : java.nio.file.Files.readAllLines(f.toPath())) {
+            String[] t = line.split(" ", 4);
+            if (t.length == 4) p.set(Integer.parseInt(t[0]), Integer.parseInt(t[1]), Integer.parseInt(t[2]), t[3]);
+        }
+        return p;
+    }
+
     static void contract(String name, BuildPlan p) {
         errors = 0;
         p.forEach((k, d) -> {
@@ -222,6 +233,8 @@ public final class PlanTool {
             case "spawn", "prigione" -> {
                 String[] cr = {"minecraft:chest[facing=west", "minecraft:ender_chest[facing=west", "minecraft:purple_shulker_box[facing=up", "minecraft:yellow_shulker_box[facing=up"};
                 for (int i = 0; i < 4; i++) { int[] c = it.pepita.core.world.Layout.PRISON_CRATES[i]; expect(p, "cassa " + i, c[0], c[1], c[2], cr[i]); }
+                double[] bn = it.pepita.core.world.Layout.PRISON_NPC;
+                airBox(p, "Beppe nel cortile", (int) Math.floor(bn[0]), 100, (int) Math.floor(bn[2]), (int) Math.floor(bn[0]), 102, (int) Math.floor(bn[2]));
                 for (int[] c : it.pepita.core.world.Layout.PRISON_BOARDS) {
                     if (isAir(p, c[0], c[1], c[2])) err("classifica senza blocco in " + c[0] + "," + c[1] + "," + c[2]);
                     airBox(p, "sopra la classifica", c[0], c[1] + 1, c[2], c[0], c[1] + 3, c[2]);

@@ -20,7 +20,7 @@ public final class Layout {
     public static final int HUB_FLOOR = 99;
     /** x, y, z, yaw */
     public static final double[] HUB_SPAWN = {0.5, 100, 16.5, 180};
-    /** NPC del tutorial (guarda verso sud, verso chi arriva). */
+    /** Secondino della modalità Prison nella lobby del plugin (guarda verso sud, verso chi arriva). */
     public static final double[] HUB_NPC = {0.5, 100, 7.5, 0};
     /** Centro del grande logo animato (ItemDisplay), visibile dallo spawn guardando a nord. */
     public static final double[] HUB_LOGO = {0.5, 124, -34.5};
@@ -45,6 +45,8 @@ public final class Layout {
     //  PRIGIONE (mondo "pepita"): resta lo spawn originale, vedi WorldService.
     // =====================================================================
     public static final double[] PRISON_SPAWN = {0.5, 100, 27.5, 180};
+    /** Beppe il Secondino (tutorial), a sinistra di chi arriva nel cortile. */
+    public static final double[] PRISON_NPC = {-2.5, 100, 25.5, -56};
     /** Blocchi interattivi dello spawn della prigione (x, y, z del blocco). */
     public static final int[][] PRISON_CRATES = {{22, 100, -6}, {22, 100, -2}, {22, 100, 2}, {22, 100, 6}};
     public static final int[][] PRISON_BOARDS = {{-22, 100, -8}, {-22, 100, 0}, {-22, 100, 8}};

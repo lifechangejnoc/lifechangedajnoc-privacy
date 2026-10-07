@@ -51,7 +51,7 @@ public final class GoldRush {
         long now = System.currentTimeMillis();
         if (active()) {
             endAt += seconds * 1000L;
-            Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<gold>La Corsa all'Oro si allunga!</gold> <gray>(+" + Fmt.time(seconds) + ")"));
+            Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<gold>La Corsa all'Oro si allunga!</gold> <gray>(+" + Fmt.time(seconds) + ")"));
             return;
         }
         startAt = now;
@@ -63,7 +63,7 @@ public final class GoldRush {
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1.2f);
             p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1f, 1f);
         }
-        Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<gold><b>CORSA ALL'ORO!</b></gold> " + cause
+        Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<gold><b>CORSA ALL'ORO!</b></gold> " + cause
                 + " <gray>Per <white>" + Fmt.time(seconds) + "</white> soldi e pepite raddoppiano e nelle miniere compaiono le <gold>Pepite Giganti</gold>!"));
         plugin.mines().refreshActive();
     }
@@ -75,7 +75,8 @@ public final class GoldRush {
             bar.name(Txt.mm("<gradient:#FFF6B7:#FFD54A:#FFA726><b>☀ CORSA ALL'ORO ☀</b></gradient> <gray>soldi e pepite <gold>x2</gold> • <yellow>" + Fmt.time(secondsLeft())));
             bar.progress(prog);
             for (Player p : Bukkit.getOnlinePlayers()) {
-                p.showBossBar(bar);
+                refresh(p);
+                if (plugin.lobby().in(p)) continue;
                 if (ThreadLocalRandom.current().nextInt(4) == 0)
                     p.getWorld().spawnParticle(Particle.WAX_ON, p.getLocation().add(0, 2.2, 0), 3, 0.6, 0.3, 0.6, 0);
             }
@@ -84,7 +85,7 @@ public final class GoldRush {
         if (endAt != 0) {
             endAt = 0;
             for (Player p : Bukkit.getOnlinePlayers()) p.hideBossBar(bar);
-            Bukkit.broadcast(Txt.mm(Txt.PREFIX + "La <gold>Corsa all'Oro</gold> è finita. Alla prossima!"));
+            Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "La <gold>Corsa all'Oro</gold> è finita. Alla prossima!"));
             scheduleNext();
         }
         if (nextAt > 0 && now >= nextAt && !Bukkit.getOnlinePlayers().isEmpty()) {
@@ -94,7 +95,13 @@ public final class GoldRush {
             scheduleNext();
         }
         long warn = secondsToNext();
-        if (warn == 60) Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<gold>Corsa all'Oro</gold> tra <white>1 minuto</white>! Preparate i picconi."));
+        if (warn == 60) Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<gold>Corsa all'Oro</gold> tra <white>1 minuto</white>! Preparate i picconi."));
+    }
+
+    /** La bossbar si vede solo nel prison, non nella lobby. */
+    public void refresh(Player p) {
+        if (active() && !plugin.lobby().in(p)) p.showBossBar(bar);
+        else p.hideBossBar(bar);
     }
 
     public void hideAll() {

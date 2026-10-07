@@ -38,8 +38,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Tutorial interattivo guidato da "Beppe il Secondino" (Mannequin nell'hub): passi legati alle azioni del giocatore,
- * fumetto personale sopra l'NPC, titoli e ricompensa finale. Parte al primo accesso e con /tutorial.
+ * Tutorial interattivo guidato da "Beppe il Secondino" (Mannequin nel cortile della prigione): passi legati alle azioni del giocatore,
+ * fumetto personale sopra l'NPC, titoli e ricompensa finale. Parte la prima volta che si entra nel Prison e con /tutorial.
  */
 public final class Tutorial implements Listener {
     public enum Ev { MENU, MINE, BLOCK, RANKUP, ENCHANT, CRATE, SKIN, PVP, CELLS, PASS }
@@ -48,14 +48,14 @@ public final class Tutorial implements Listener {
 
     private static final Step[] STEPS = {
             new Step(Ev.MENU, 1, "Il menu", "Apri il <gold>menu</gold>: tasto destro con la <yellow>stella</yellow> nell'ultimo slot (o <yellow>/menu</yellow>)."),
-            new Step(Ev.MINE, 1, "In miniera", "Entra nel portale delle <aqua>Miniere</aqua> qui nell'hub (o usa la <yellow>bussola</yellow>)."),
+            new Step(Ev.MINE, 1, "In miniera", "Entra nel portale delle <aqua>Miniere</aqua> a nord del cortile (o usa la <yellow>bussola</yellow>)."),
             new Step(Ev.BLOCK, 20, "Scava!", "Rompi <white>20 blocchi</white> col tuo piccone: si vendono da soli."),
             new Step(Ev.RANKUP, 1, "Sali di rank", "Scrivi <yellow>/rankup</yellow>: ogni rank sblocca una miniera migliore. Il primo te lo offro io!"),
             new Step(Ev.ENCHANT, 1, "Incantesimi", "Tasto destro col piccone e compra un <gold>incantesimo</gold> con le Pepite (ti ho dato qualche Pepita)."),
             new Step(Ev.CRATE, 1, "Le casse", "Apri una <gold>cassa</gold> con <yellow>/casse</yellow>: hai già delle chiavi."),
             new Step(Ev.SKIN, 1, "Le skin", "Le skin sono add-on: trascinale sul piccone o su un pezzo della corazza e lo potenziano. Apri <yellow>/skin</yellow>. Eccone una in regalo!"),
-            new Step(Ev.PVP, 1, "Quantum e PvP", "Visita la <red>Miniera PvP</red> (portale rosso nell'hub): lì si trovano i <aqua>Quantum</aqua>. Attento agli altri!"),
-            new Step(Ev.CELLS, 1, "Le celle", "Visita il <gold>Colosseo delle Celle</gold> (portale nell'hub o <yellow>/cella</yellow>): puoi comprarne una e arredarla."),
+            new Step(Ev.PVP, 1, "Quantum e PvP", "Visita la <red>Miniera PvP</red> (bussola o <yellow>/pvp</yellow>): lì si trovano i <aqua>Quantum</aqua>. Attento agli altri!"),
+            new Step(Ev.CELLS, 1, "Le celle", "Visita il <gold>Colosseo delle Celle</gold> (bussola o <yellow>/cella</yellow>): puoi comprarne una e arredarla."),
             new Step(Ev.PASS, 1, "Battle pass", "Apri il <gold>Battle Pass</gold> con <yellow>/battlepass</yellow>: missioni giornaliere e premi a ogni livello."),
     };
 
@@ -82,9 +82,9 @@ public final class Tutorial implements Listener {
 
     public void spawnNpc() {
         removeNpc();
-        World w = plugin.world().hub();
+        World w = plugin.world().prison();
         if (w == null) return;
-        double[] n = Layout.HUB_NPC;
+        double[] n = Layout.PRISON_NPC;
         Location l = new Location(w, n[0], n[1], n[2], (float) n[3], 0);
         npcPack = spawnMannequin(l, true);
         npcPlain = spawnMannequin(l, false);
@@ -148,7 +148,7 @@ public final class Tutorial implements Listener {
     }
 
     private boolean isNpc(Entity e) {
-        return e.getPersistentDataContainer().has(Keys.NPC, PersistentDataType.STRING);
+        return "beppe".equals(e.getPersistentDataContainer().get(Keys.NPC, PersistentDataType.STRING));
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -303,7 +303,7 @@ public final class Tutorial implements Listener {
 
     private void updateBubble(Player p, PlayerData d) {
         TextDisplay old = bubbles.get(p.getUniqueId());
-        boolean want = active(d) && plugin.world().isHub(p.getWorld()) && npcPack != null;
+        boolean want = active(d) && plugin.world().isPrison(p.getWorld()) && npcPack != null;
         if (!want) {
             if (old != null) {
                 old.remove();
@@ -317,7 +317,7 @@ public final class Tutorial implements Listener {
             old.text(Txt.mm(text));
             return;
         }
-        double[] n = Layout.HUB_NPC;
+        double[] n = Layout.PRISON_NPC;
         Location l = new Location(p.getWorld(), n[0], n[1] + 3.1, n[2]);
         TextDisplay td = p.getWorld().spawn(l, TextDisplay.class, t -> {
             t.text(Txt.mm(text));
@@ -360,7 +360,7 @@ public final class Tutorial implements Listener {
                 near = p;
             }
         }
-        float yaw = (float) Layout.HUB_NPC[3], pitch = 0;
+        float yaw = (float) Layout.PRISON_NPC[3], pitch = 0;
         if (near != null) {
             Location e = near.getEyeLocation();
             double dx = e.getX() - base.getX(), dz = e.getZ() - base.getZ(), dy = e.getY() - (base.getY() + 1.62);

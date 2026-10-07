@@ -46,7 +46,7 @@ public final class Milestones {
                         Txt.mm("<white>" + Fmt.num(s) + "</white> <gray>blocchi rotti • ritira il premio: <yellow>/traguardi"),
                         Title.Times.times(Duration.ofMillis(200), Duration.ofMillis(2200), Duration.ofMillis(500))));
                 p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);
-                if (s >= 1_000_000) Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> ha rotto <gold>"
+                if (s >= 1_000_000) Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> ha rotto <gold>"
                         + Fmt.num(s) + "</gold> blocchi!"));
             }
         }

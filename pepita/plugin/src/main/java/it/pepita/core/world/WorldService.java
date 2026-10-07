@@ -43,6 +43,7 @@ public final class WorldService {
     public static final List<String> WORLDS = List.of(W_HUB, W_PRISON, W_MINES, W_PVP, W_CELLS);
 
     private final PepitaCore plugin;
+    private final LobbyMap lobbyMap;
     private final Map<String, World> worlds = new LinkedHashMap<>();
     private final Map<Long, Crate> crateBlocks = new HashMap<>();
     private final Deque<Job> jobs = new ArrayDeque<>();
@@ -59,6 +60,7 @@ public final class WorldService {
 
     public WorldService(PepitaCore plugin) {
         this.plugin = plugin;
+        this.lobbyMap = new LobbyMap(plugin);
         Crate[] cs = Crate.values();
         for (int i = 0; i < cs.length; i++)
             crateBlocks.put(bk(PRISON_CRATES[i][0], PRISON_CRATES[i][1], PRISON_CRATES[i][2]), cs[i]);
@@ -72,9 +74,18 @@ public final class WorldService {
     //  Mondi
     // =====================================================================
 
+    /** Mappa esterna della lobby (se installata). */
+    public LobbyMap lobbyMap() {
+        return lobbyMap;
+    }
+
     public void load() {
+        // una mappa nuova per la lobby va installata prima di creare il mondo
+        lobbyMap.prepare(() -> create(W_HUB));
         for (String n : WORLDS) worlds.put(n, create(n));
-        keepLoaded(hub(), 0, -8, 3);
+        lobbyMap.afterLoad(hub());
+        double[] ls = lobbyMap.spawn();
+        keepLoaded(hub(), (int) Math.floor(ls[0]), (int) Math.floor(ls[2]) - 8, 3);
         keepLoaded(prison(), 0, 0, 3);
         keepLoaded(pvp(), 0, 0, 3);
         keepLoaded(cells(), 0, 0, 2);
@@ -86,7 +97,7 @@ public final class WorldService {
     }
 
     private World create(String name) {
-        double[] sp = spawnArray(name);
+        double[] sp = name.equals(W_HUB) ? lobbyMap.spawn() : spawnArray(name);
         Biome biome = switch (name) {
             case W_PVP -> Biome.BASALT_DELTAS;
             case W_CELLS -> Biome.SAVANNA;
@@ -175,7 +186,13 @@ public final class WorldService {
         return new Location(w, a[0], a[1], a[2], (float) a[3], 0);
     }
 
-    public Location hubSpawn() { return loc(hub(), HUB_SPAWN); }
+    public Location hubSpawn() { return loc(hub(), lobbyMap.spawn()); }
+
+    /** Dove sta il secondino della modalità Prison nella lobby. */
+    public Location hubNpc() { return loc(hub(), lobbyMap.npc()); }
+
+    /** Sotto questa altezza si torna allo spawn del mondo. */
+    public int voidY(World w) { return isHub(w) ? lobbyMap.voidY() : 40; }
     public Location prisonSpawn() { return loc(prison(), PRISON_SPAWN); }
     public Location pvpSpawn() { return loc(pvp(), PVP_SPAWN); }
     public Location cellsSpawn() { return loc(cells(), CELLS_SPAWN); }
@@ -187,7 +204,7 @@ public final class WorldService {
     public Location spawnOf(World w) {
         if (w == null) return hubSpawn();
         return switch (w.getName()) {
-            case W_PRISON -> prisonSpawn();
+            case W_PRISON, W_MINES -> prisonSpawn(); // chi gioca al Prison resta nel Prison
             case W_PVP -> pvpSpawn();
             case W_CELLS -> cellsSpawn();
             default -> hubSpawn();
@@ -207,9 +224,9 @@ public final class WorldService {
     /** Zone "di spawn" (hub e piazza della prigione): volo consentito e fisica bloccata. */
     public boolean inSpawn(Location l) {
         World w = l.getWorld();
+        if (isHub(w)) return true; // tutta la lobby
         if (w == null || l.getY() < 50) return false;
         double dx = l.getX(), dz = l.getZ();
-        if (isHub(w)) return dx * dx + dz * dz < (HUB_RADIUS + 6) * (HUB_RADIUS + 6);
         if (isPrison(w)) return dx * dx + dz * dz < (PRISON_RADIUS + 10) * (PRISON_RADIUS + 10);
         return false;
     }
@@ -250,7 +267,7 @@ public final class WorldService {
     public void buildMissing(Runnable done) {
         boolean oldPrison = migrateOldPrison;
         List<String> todo = new ArrayList<>();
-        for (String w : WORLDS) if (!built(w)) todo.add(w);
+        for (String w : WORLDS) if (!built(w) && !(w.equals(W_HUB) && lobbyMap.active())) todo.add(w);
         if (todo.isEmpty()) {
             if (done != null) done.run();
             return;
@@ -278,6 +295,12 @@ public final class WorldService {
             String w = alias(which);
             if (w == null) return false;
             list.add(w);
+        }
+        // la lobby con una mappa esterna non si ricostruisce: la cambierebbe con quella del plugin
+        if (lobbyMap.active() && list.remove(W_HUB)) plugin.getLogger().info("La lobby usa una mappa esterna: non viene ricostruita.");
+        if (list.isEmpty()) {
+            if (done != null) done.run();
+            return true;
         }
         for (int i = 0; i < list.size(); i++) {
             String w = list.get(i);

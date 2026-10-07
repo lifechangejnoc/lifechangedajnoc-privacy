@@ -74,9 +74,9 @@ public final class PlayerListener implements Listener {
                 : "<dark_gray>[<green>+</green>]</dark_gray> <gray>" + Txt.esc(p.getName())));
         if (first || !plugin.world().managed(p.getWorld()) || plugin.getConfig().getBoolean("mondo.spawn-ad-ogni-accesso", true))
             p.teleport(plugin.world().hubSpawn());
-        if (p.getGameMode() != GameMode.CREATIVE) p.setGameMode(GameMode.SURVIVAL);
-        plugin.picks().ensureKit(p);
         plugin.sidebar().create(p);
+        // lobby: solo la bussola delle modalità; prison: inventario, piccone e corazza
+        plugin.lobby().sync(p);
         plugin.sidebar().updateTab(p);
         p.setFoodLevel(20);
         var hp = p.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH);
@@ -84,24 +84,23 @@ public final class PlayerListener implements Listener {
         plugin.keyAll().onJoin(p);
         plugin.billboard().refreshView(p);
         plugin.tutorial().refreshView(p);
+        plugin.lobby().refreshView(p);
 
         plugin.packs().send(p);
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!p.isOnline()) return;
             p.showTitle(Title.title(Txt.mm(Txt.LOGO),
-                    Txt.mm(first ? "<gray>Benvenuto in prigione, <white>" + Txt.esc(p.getName()) + "</white>!" : "<gray>Bentornato, <white>" + Txt.esc(p.getName())),
+                    Txt.mm(first ? "<gray>Benvenuto su Pepita, <white>" + Txt.esc(p.getName()) + "</white>!" : "<gray>Bentornato, <white>" + Txt.esc(p.getName())),
                     Title.Times.times(Duration.ofMillis(500), Duration.ofMillis(2500), Duration.ofMillis(800))));
             p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1f);
             if (first) {
                 Txt.raw(p, "");
                 Txt.raw(p, "<gradient:#FFE259:#FFA751><b>━━━━━━━━ BENVENUTO SU PEPITA ━━━━━━━━</b></gradient>");
-                Txt.raw(p, "<gray>Sei un detenuto: <white>scava</white>, guadagna e scala i rank da <white>A</white> a <gold>Z</gold>.");
-                Txt.raw(p, "<gray>Parla con <gold>Beppe il Secondino</gold> davanti a te: ti guida passo passo.");
-                Txt.raw(p, "<gray>La <yellow>bussola</yellow> ti porta ovunque: prigione, miniere, PvP, celle.");
-                Txt.raw(p, "<gray>Hai ricevuto <white>3 chiavi Comuni</white>: aprile in <yellow>/casse</yellow>.");
+                Txt.raw(p, "<gray>Sei nella <white>lobby</white>. Tasto destro con la <yellow>bussola</yellow> per scegliere la modalità,");
+                Txt.raw(p, "<gray>oppure entra nel portale o parla con il secondino del <gold>Prison</gold>.");
                 Txt.raw(p, "");
             }
-            if (first && plugin.getConfig().getBoolean("tutorial.automatico", true)) plugin.tutorial().start(p);
+            if (plugin.lobby().in(p)) return;
             if (d.skinDeposito.size() > 0)
                 Txt.send(p, "Hai <white>" + d.skinDeposito.size() + "</white> skin nel deposito: ritirale da <yellow>/skin</yellow>.");
             int t = plugin.milestones().claimable(d);
@@ -119,6 +118,7 @@ public final class PlayerListener implements Listener {
             plugin.picks().applyArmor(p, d);
             plugin.billboard().refreshView(p);
             plugin.tutorial().refreshView(p);
+            plugin.lobby().refreshView(p);
         } else if (e.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED || e.getStatus() == PlayerResourcePackStatusEvent.Status.FAILED_DOWNLOAD) {
             d.hasPack = false;
             Txt.send(p, "Senza resource pack non vedrai skin, menu decorati e logo. Puoi attivarlo dalla lista server.");
@@ -138,9 +138,11 @@ public final class PlayerListener implements Listener {
     @EventHandler
     public void onRespawn(PlayerRespawnEvent e) {
         World w = e.getPlayer().getWorld();
-        e.setRespawnLocation(plugin.world().isPvp(w) ? plugin.world().pvpSpawn() : plugin.world().isCells(w) ? plugin.world().cellsSpawn()
-                : plugin.world().hubSpawn());
-        Bukkit.getScheduler().runTask(plugin, () -> plugin.picks().ensureKit(e.getPlayer()));
+        WorldService ws = plugin.world();
+        // chi muore nel prison resta nel prison: la lobby è separata
+        e.setRespawnLocation(ws.isPvp(w) ? ws.pvpSpawn() : ws.isCells(w) ? ws.cellsSpawn() : ws.isHub(w) || !ws.managed(w) ? ws.hubSpawn()
+                : ws.prisonSpawn());
+        Bukkit.getScheduler().runTask(plugin, () -> plugin.lobby().sync(e.getPlayer()));
     }
 
     @EventHandler
@@ -210,7 +212,9 @@ public final class PlayerListener implements Listener {
         PlayerData d = plugin.data().get(p);
         GangManager.Gang g = plugin.gangs().get(d.gang);
         VipTier vt = VipTier.of(d.vip);
-        String prefix = (g != null ? "<#FF7B7B>[" + g.name + "]</#FF7B7B> " : "")
+        // nella lobby niente gang e rank del prison
+        String prefix = plugin.lobby().in(p) ? "<dark_gray>[<gray>Lobby</gray>]</dark_gray> " + (vt != VipTier.NESSUNO ? vt.tag + " " : "")
+                : (g != null ? "<#FF7B7B>[" + g.name + "]</#FF7B7B> " : "")
                 + "<dark_gray>[</dark_gray>" + RankManager.tag(d) + "<dark_gray>]</dark_gray> "
                 + (vt != VipTier.NESSUNO ? vt.tag + " " : "");
         String nameColor = vt == VipTier.NESSUNO ? "<gray>" : "<white>";
@@ -372,7 +376,14 @@ public final class PlayerListener implements Listener {
         Location l = e.getLocation();
         String dest = null;
         if (ws.isHub(w)) {
-            for (Object[] box : Layout.HUB_PORTALS) if (inBox(box, l)) dest = (String) box[0];
+            if (ws.lobbyMap().active()) dest = "prigione"; // mappa esterna: qualunque portale porta al Prison
+            else for (Object[] box : Layout.HUB_PORTALS) if (inBox(box, l)) dest = (String) box[0];
+            if (dest == null) return;
+            portalCooldown.put(p.getUniqueId(), now);
+            // nella lobby solo il portale del Prison è attivo, gli altri sono le modalità in arrivo
+            if (dest.equals("prigione")) Bukkit.getScheduler().runTask(plugin, () -> plugin.lobby().enterPrisonMode(p));
+            else p.sendActionBar(Txt.mm("<gray>Questa modalità è <white>in arrivo</white>. Per ora gioca al <gold>Prison</gold>!"));
+            return;
         } else if (ws.isPrison(w)) dest = "miniere";
         if (dest == null) return;
         portalCooldown.put(p.getUniqueId(), now);
@@ -396,7 +407,7 @@ public final class PlayerListener implements Listener {
         Player p = e.getPlayer();
         World w = p.getWorld();
         if (!plugin.world().managed(w)) return;
-        if (e.getTo().getY() < 40) {
+        if (e.getTo().getY() < plugin.world().voidY(w)) {
             p.setFallDistance(0);
             Location to;
             if (plugin.world().isMines(w) || plugin.world().isPvp(w)) {

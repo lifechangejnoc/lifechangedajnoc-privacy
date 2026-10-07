@@ -111,7 +111,7 @@ public final class LuckyBlocks {
                     d.addKeys("leggendaria", 1);
                     got.add("<#D17BFF>1 Chiave Leggendaria");
                 }
-                Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> ha aperto un <gold><b>Lucky Block LEGGENDARIO</b></gold>!"));
+                Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> ha aperto un <gold><b>Lucky Block LEGGENDARIO</b></gold>!"));
             }
             case TRAPPOLA -> trap(p, c);
         }

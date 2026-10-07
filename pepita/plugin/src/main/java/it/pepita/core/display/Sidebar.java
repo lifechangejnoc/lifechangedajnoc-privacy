@@ -61,6 +61,10 @@ public final class Sidebar {
         PlayerData d = plugin.data().get(p);
         boolean pk = d.hasPack;
         RankManager rm = plugin.ranks();
+        if (plugin.lobby().in(p)) {
+            write(p, sb, o, lobbyLines(p, d));
+            return;
+        }
         List<String> lines = new ArrayList<>();
         lines.add(" ");
         if (d.rank >= RankManager.MAX_RANK) {
@@ -88,6 +92,28 @@ public final class Sidebar {
             lines.add("<gold>⚡ Booster x" + Fmt.num(d.boostMult) + " <white>" + Fmt.time((d.boostUntil - System.currentTimeMillis()) / 1000));
         lines.add("    ");
         lines.add("<gradient:#FFE259:#FFA751>" + ip + "</gradient>");
+        write(p, sb, o, lines);
+    }
+
+    /** Scoreboard della lobby: niente del prison, solo le modalità e il server. */
+    private List<String> lobbyLines(Player p, PlayerData d) {
+        List<String> lines = new ArrayList<>();
+        lines.add(" ");
+        lines.add("<gray>Ciao, <white>" + Txt.esc(p.getName()));
+        VipTier vt = VipTier.of(d.vip);
+        lines.add("<gray>Grado " + (vt != VipTier.NESSUNO ? vt.tag : "<white>Giocatore"));
+        lines.add("  ");
+        lines.add("<gold><b>Modalità</b></gold>");
+        lines.add("<gray>⛓ Prison <dark_gray>» <white>" + plugin.lobby().prisonPlayers() + " <gray>in gioco");
+        lines.add("   ");
+        lines.add("<gray>Online <white>" + Bukkit.getOnlinePlayers().size());
+        lines.add("<yellow>Bussola</yellow> <gray>per giocare");
+        lines.add("    ");
+        lines.add("<gradient:#FFE259:#FFA751>" + ip + "</gradient>");
+        return lines;
+    }
+
+    private void write(Player p, Scoreboard sb, Objective o, List<String> lines) {
         if (lines.size() > ENTRIES.length) lines = lines.subList(0, ENTRIES.length);
 
         int n = lines.size();
@@ -127,6 +153,10 @@ public final class Sidebar {
     public void updateTab(Player p) {
         PlayerData d = plugin.data().get(p);
         String logo = d.hasPack ? "<white><font:pepita:logo></font></white>" : "<gradient:#FFE259:#FFA751><b>⛏  P E P I T A  ⛏</b></gradient>";
+        if (plugin.lobby().in(p)) {
+            updateLobbyTab(p, d, logo);
+            return;
+        }
         // il logo del pack è alto 40px con ascent 34: servono righe vuote sopra perché non venga tagliato
         Component header = Txt.mm((d.hasPack ? "\n\n\n\n" : "\n") + logo + "\n" + (d.hasPack ? "\n" : "") + "<gray>Il prison della <gold>Corsa all'Oro</gold>\n");
         StringBuilder f = new StringBuilder("\n");
@@ -158,5 +188,19 @@ public final class Sidebar {
         VipTier vt = VipTier.of(d.vip);
         p.playerListName(Txt.mm("<dark_gray>[</dark_gray>" + RankManager.tag(d) + "<dark_gray>]</dark_gray> "
                 + (vt != VipTier.NESSUNO ? vt.tag + " " : "") + "<white>" + Txt.esc(p.getName())));
+    }
+
+    /** Tab della lobby: logo, modalità e server, senza nulla del prison. */
+    private void updateLobbyTab(Player p, PlayerData d, String logo) {
+        // il logo del pack è alto 40px con ascent 34: servono righe vuote sopra perché non venga tagliato
+        Component header = Txt.mm((d.hasPack ? "\n\n\n\n" : "\n") + logo + "\n" + (d.hasPack ? "\n" : "") + "<gray>Lobby\n");
+        String f = "\n<gold><b>Modalità</b></gold>\n<gray>⛓ Prison <dark_gray>» <white>" + plugin.lobby().prisonPlayers() + " <gray>in gioco\n\n"
+                + "<gray>Usa la <yellow>bussola</yellow> per scegliere a cosa giocare\n\n"
+                + "<gray>Online <white>" + Bukkit.getOnlinePlayers().size() + " <dark_gray>• <gray>Ping <white>" + p.getPing()
+                + "ms\n<gradient:#FFE259:#FFA751>" + ip + "</gradient>\n";
+        p.sendPlayerListHeaderAndFooter(header, Txt.mm(f));
+        VipTier vt = VipTier.of(d.vip);
+        p.playerListName(Txt.mm("<dark_gray>[<gray>Lobby</gray>]</dark_gray> " + (vt != VipTier.NESSUNO ? vt.tag + " " : "")
+                + "<white>" + Txt.esc(p.getName())));
     }
 }

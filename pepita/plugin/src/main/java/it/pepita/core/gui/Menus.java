@@ -176,8 +176,8 @@ public final class Menus {
         Menu m = new Menu(3, "Dove vuoi andare?").emblem(Gui.Emblem.SELETTORE);
         Mine best = plugin.mines().best(d);
         Mine pvp = plugin.mines().pvpMine();
-        m.set(10, Gui.button(p, "gui_hub", Material.LODESTONE).name("<gradient:#FFE259:#FFA751><b>Hub</b></gradient>")
-                .lore("<gray>La piazza con i portali.", "", click("Click per andare")).build(), e -> travel(p, "hub"));
+        m.set(10, Gui.button(p, "gui_hub", Material.COMPASS).name("<gradient:#FFE259:#FFA751><b>Lobby</b></gradient>")
+                .lore("<gray>Esci dal Prison e torna", "<gray>alla scelta delle modalità.", "", click("Click per andare")).build(), e -> travel(p, "hub"));
         m.set(11, Gui.button(p, "gui_prigione", Material.IRON_BARS).name("<#C9C9C9><b>Prigione</b>")
                 .lore("<gray>Casse, incantesimi, negozio,", "<gray>corazza, battle pass, classifiche.", "", click("Click per andare")).build(), e -> travel(p, "prigione"));
         m.set(12, Gui.button(p, "gui_miniere", Material.DIAMOND_PICKAXE).name("<#55E6FF><b>Miniere</b>")
@@ -212,7 +212,7 @@ public final class Menus {
         switch (dest) {
             case "hub" -> {
                 p.teleport(plugin.world().hubSpawn());
-                p.sendActionBar(Txt.mm("<gradient:#FFE259:#FFA751>Hub di Pepita"));
+                p.sendActionBar(Txt.mm("<gradient:#FFE259:#FFA751>Lobby di Pepita"));
             }
             case "prigione" -> {
                 p.teleport(plugin.world().prisonSpawn());
@@ -237,8 +237,10 @@ public final class Menus {
                 p.sendActionBar(Txt.mm("<gold>Colosseo delle Celle <gray>• prendi un ascensore agli angoli"));
             }
             case "tutorial" -> {
-                double[] n = Layout.HUB_NPC;
-                p.teleport(new Location(plugin.world().hub(), n[0], n[1], n[2] + 3, 180f, 0));
+                // nel cortile, girati verso Beppe
+                double[] s = Layout.PRISON_SPAWN, n = Layout.PRISON_NPC;
+                float yaw = (float) Math.toDegrees(Math.atan2(-(n[0] - s[0]), n[2] - s[2]));
+                p.teleport(new Location(plugin.world().prison(), s[0], s[1], s[2], yaw, 0));
                 if (!plugin.tutorial().active(d) && !d.tutorialDone) plugin.tutorial().start(p);
             }
             default -> {
@@ -365,7 +367,7 @@ public final class Menus {
         p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.6f, 1.4f);
         Txt.send(p, "Il tuo piccone è ora " + nx.label() + "<gray>! Moltiplicatore delle skin <white>x" + Fmt.num(nx.mult));
         if (nx.ordinal() >= PickTier.PEPITA.ordinal())
-            org.bukkit.Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> ha forgiato un piccone " + nx.label() + "<gray>!"));
+            Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> ha forgiato un piccone " + nx.label() + "<gray>!"));
     }
 
     // =========================== INCANTESIMI ===========================
@@ -563,7 +565,7 @@ public final class Menus {
                 if (owned) return;
                 purchase(p, "Grado " + t.plain, price, () -> {
                     d.vip = t.level;
-                    org.bukkit.Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> è diventato " + t.tag + "<gray>! Grazie per il supporto ❤"));
+                    Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> è diventato " + t.tag + "<gray>! Grazie per il supporto ❤"));
                 }, () -> shopVip(p));
             });
         }

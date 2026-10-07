@@ -5,8 +5,8 @@
 Cosa contiene il plugin
 -----------------------
 - 5 mondi vuoti separati, costruiti dal plugin al primo avvio:
-    pepita_hub      hub con portali, bussola dei viaggi, logo, cartellone e Beppe il Secondino (tutorial)
-    pepita          cortile della prigione
+    pepita_hub      la LOBBY, separata dal Prison (vedi sotto); può essere una mappa scaricata
+    pepita          cortile della prigione, con Beppe il Secondino (tutorial)
     pepita_miniere  le miniere A–Z (29x29, profonde 30) su isole a 8 temi
     pepita_pvp      la Miniera PvP dei Quantum (zona sicura al centro, PvP intorno)
     pepita_celle    il colosseo delle celle (10 piani x 32 settori, porte di ferro, ascensori)
@@ -34,8 +34,32 @@ INSTALLAZIONE SU FALIX
 
 4. In console scrivi:  op <il tuo nome>
 
-5. Versione di Java: Paper 26.2 richiede Java 25 (sul pannello Falix: Startup → Java 25).
+5. Versione di Java: Paper 26.2 richiede Java 25 (pannello Falix: Settings → Environment → Java 25).
    Il jar consegnato gira su Java 25 senza problemi.
+
+6. (Facoltativo) Mappa per la lobby: crea la cartella plugins/PepitaCore/mappe/ e caricaci lobby.zip
+   (lo zip della mappa preparato per il plugin). Riavvia: in console compare
+   "Nuova mappa per la lobby: lobby.zip. Installazione..." e poi l'import di Paper
+   ("Starting legacy CraftBukkit import for world 'pepita_hub'"). La lobby del plugin va in una
+   cartella pepita_hub_backup_<data> nella radice del server (puoi cancellarla quando vuoi).
+
+
+LA LOBBY
+========
+- Entrando nel server si arriva nella lobby: è staccata dal Prison come se fosse un server a parte.
+  Nell'inventario c'è SOLO la bussola "Modalità" (tasto destro → scegli la modalità, per ora il Prison).
+  Niente piccone, corazza, scoreboard, tab, bossbar o messaggi del Prison; chat con il tag [Lobby].
+- Si entra nel Prison con la bussola, parlando con il secondino "PRISON" o con /prigione.
+  L'inventario del Prison viene salvato quando si torna in lobby e rimesso com'era quando si rientra.
+- Dal Prison si torna in lobby con /lobby o /hub (nel Prison /spawn riporta al cortile).
+- Lo spawn della lobby e il secondino si spostano in gioco: mettiti nel punto voluto, guarda nella
+  direzione giusta e scrivi /pa lobby spawn oppure /pa lobby npc.
+- Per tornare alla lobby costruita dal plugin: in config.yml metti lobby.mappa: "" e
+  lobby.mappa-installata: "", ferma il server, cancella la cartella del mondo pepita_hub (il percorso
+  esatto lo scrive /pa lobby info) e riavvia.
+- Nella lobby i comandi del Prison (/rankup, /incantesimi, /casse...) rispondono di entrare prima nel Prison.
+- Licenza della mappa: è dell'autore (dentro lo zip trovi "License & Usage Terms.txt"). Prima di usarla
+  su un server con negozio controlla i termini dell'autore.
 
 Primo avvio: la costruzione dei mondi
 -------------------------------------
@@ -78,8 +102,9 @@ COMANDI DEI GIOCATORI
 Generali
   /menu  (/m)                      tutto in un menu
   /pepita  (/aiuto, /comandi)      lista dei comandi
-  /selettore  (/viaggi)            menu dei viaggi (lo apre anche la bussola)
-  /spawn  (/hub, /lobby)           torna all'hub
+  /lobby  (/hub)                   torna alla lobby
+  /spawn                           nel Prison: torna al cortile (nella lobby: allo spawn)
+  /selettore  (/viaggi)            nella lobby: modalità; nel Prison: menu dei viaggi
   /prigione  (/cortile)            vai nel cortile della prigione
   /pvp                             vai nella Miniera PvP dei Quantum
   /tutorial                        il tutorial di Beppe  (/tutorial salta, /tutorial ricomincia)
@@ -165,7 +190,8 @@ Eventi
 
 Mondi e manutenzione
   /pa reset <miniera|tutte>                      resetta le miniere
-  /pa ricostruisci <hub|prigione|miniere|pvp|celle|tutti>
+  /pa ricostruisci <hub|prigione|miniere|pvp|celle|tutti>   (la lobby con una mappa non si ricostruisce)
+  /pa lobby <spawn|npc|info>                     sposta spawn o secondino della lobby dove sei
   /pa cella libera <piano 1-10> <settore 1-32>   libera una cella
   /pa cella reset <piano 1-10> <settore 1-32>    svuota una cella
   /pa ologrammi  (/pa npc)                       ricrea ologrammi, logo, cartellone e NPC
@@ -175,7 +201,7 @@ Mondi e manutenzione
 
 Permessi
   pepita.admin   comandi staff, accesso a tutte le miniere (default: op)
-  pepita.fly     volo nell'hub, nella prigione e nelle miniere (default: op)
+  pepita.fly     volo nella lobby, nella prigione e nelle miniere (default: op)
 
 
 FILE DEL PLUGIN  (plugins/PepitaCore/)

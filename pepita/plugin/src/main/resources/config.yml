@@ -30,6 +30,22 @@ mondi:
     pepita_pvp: false
     pepita_celle: false
 
+# La lobby (mondo pepita_hub) è separata dalle modalità: inventario a parte con la sola bussola delle modalità,
+# scoreboard e tab suoi, niente del Prison. Dal Prison si torna qui con /lobby o /hub.
+lobby:
+  # Mappa esterna per la lobby: uno zip con un mondo Minecraft (cartella con level.dat e region) da mettere in
+  # plugins/PepitaCore/mappe/. Al riavvio il plugin la installa al posto della lobby costruita dal plugin
+  # (quella vecchia va in una cartella pepita_hub_backup_... nella radice del server). Vuoto = lobby del plugin.
+  mappa: "lobby.zip"
+  # Punto di arrivo e secondino del Prison: x, y, z, yaw. Vuoti = quelli della lobby del plugin (o del file
+  # pepita-lobby.yml dentro lo zip). Si impostano anche in gioco con /pa lobby spawn e /pa lobby npc.
+  spawn: []
+  npc: []
+  # Sotto questa altezza si torna allo spawn della lobby
+  vuoto-y: 40
+  # Scritto dal plugin quando installa una mappa (non toccare)
+  mappa-installata: ""
+
 resource-pack:
   # Link DIRETTO allo zip del resource pack (vedi LEGGIMI). Lascia vuoto per non inviarlo.
   url: "https://download.mc-packs.net/pack/1c7315cd6b37d5a50798c5b0f4fd53bc4b190544.zip"

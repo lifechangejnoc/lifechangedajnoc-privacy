@@ -76,6 +76,7 @@ public final class PepitaCore extends JavaPlugin implements Listener {
     private Holograms holograms;
     private Billboard billboard;
     private Tutorial tutorial;
+    private it.pepita.core.lobby.Lobby lobby;
     private Sidebar sidebar;
     private Menus menus;
     private Renderer renderer;
@@ -103,6 +104,7 @@ public final class PepitaCore extends JavaPlugin implements Listener {
     public Holograms holograms() { return holograms; }
     public Billboard billboard() { return billboard; }
     public Tutorial tutorial() { return tutorial; }
+    public it.pepita.core.lobby.Lobby lobby() { return lobby; }
     public Sidebar sidebar() { return sidebar; }
     public Menus menus() { return menus; }
     public Renderer renderer() { return renderer; }
@@ -145,6 +147,7 @@ public final class PepitaCore extends JavaPlugin implements Listener {
         holograms = new Holograms(this);
         billboard = new Billboard(this);
         tutorial = new Tutorial(this);
+        lobby = new it.pepita.core.lobby.Lobby(this);
         sidebar = new Sidebar(this);
         menus = new Menus(this);
         renderer = new Renderer(this);
@@ -153,6 +156,7 @@ public final class PepitaCore extends JavaPlugin implements Listener {
         var pm = Bukkit.getPluginManager();
         pm.registerEvents(new MenuListener(), this);
         pm.registerEvents(tutorial, this);
+        pm.registerEvents(lobby, this);
         pm.registerEvents(new PlayerListener(this), this);
         pm.registerEvents(new ProtectionListener(this), this);
         pm.registerEvents(mining, this);
@@ -180,6 +184,7 @@ public final class PepitaCore extends JavaPlugin implements Listener {
         for (Player p : Bukkit.getOnlinePlayers()) {
             data.get(p);
             sidebar.create(p);
+            lobby.sync(p);
         }
         data.refreshTops();
         startTasks();
@@ -208,6 +213,7 @@ public final class PepitaCore extends JavaPlugin implements Listener {
         if (boosters != null) boosters.hideAll();
         if (keyAll != null) keyAll.hideAll();
         if (tutorial != null) tutorial.removeNpc();
+        if (lobby != null) lobby.removeNpc();
         if (billboard != null) billboard.removeAll();
         if (holograms != null && world != null) holograms.removeAll();
         if (quantum != null) for (Player p : Bukkit.getOnlinePlayers()) quantum.removeSpeed(p);
@@ -290,7 +296,7 @@ public final class PepitaCore extends JavaPlugin implements Listener {
                 "Rompi i <gold>Lucky Block</gold> nelle miniere: premi... o scherzetti!"};
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             if (Bukkit.getOnlinePlayers().isEmpty()) return;
-            Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<gray>" + tips[ThreadLocalRandom.current().nextInt(tips.length)]));
+            Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<gray>" + tips[ThreadLocalRandom.current().nextInt(tips.length)]));
         }, 6000L, 6000L);
     }
 

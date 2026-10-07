@@ -46,7 +46,7 @@ public final class KeyAll {
         if (left <= 60 && left > 0) {
             bar.name(Txt.mm("<gradient:#D17BFF:#FFD54A><b>🗝 KEYALL</b></gradient> <gray>tra <white>" + Fmt.time(left) + "</white> <gray>• chiavi per tutti gli online!"));
             bar.progress((float) Math.max(0, Math.min(1, left / 60.0)));
-            for (Player p : Bukkit.getOnlinePlayers()) p.showBossBar(bar);
+            for (Player p : Bukkit.getOnlinePlayers()) refreshBar(p, true);
             showing = true;
             if (left == 60 || left == 30 || left <= 5)
                 for (Player p : Bukkit.getOnlinePlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6f, left <= 5 ? 2f : 1.2f);
@@ -63,13 +63,14 @@ public final class KeyAll {
             PlayerData d = plugin.data().get(p);
             d.addKeys(c.id, n);
             p.hideBossBar(bar);
+            if (plugin.lobby().in(p)) continue;
             p.showTitle(Title.title(Txt.mm("<gradient:#D17BFF:#FFD54A><b>KEYALL!</b></gradient>"),
                     Txt.mm("<gray>Tutti ricevono <white>" + n + "x</white> " + c.color + "Chiave " + c.display),
                     Title.Times.times(Duration.ofMillis(200), Duration.ofMillis(2500), Duration.ofMillis(500))));
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1.3f);
             p.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, p.getLocation().add(0, 1, 0), 30, 0.4, 0.8, 0.4, 0.3);
         }
-        Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<gradient:#D17BFF:#FFD54A><b>KEYALL!</b></gradient> <gray>Tutti gli online ricevono <white>" + n + "x</white> "
+        Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<gradient:#D17BFF:#FFD54A><b>KEYALL!</b></gradient> <gray>Tutti gli online ricevono <white>" + n + "x</white> "
                 + c.color + "Chiave " + c.display + "<gray>. Aprile in <yellow>/casse</yellow>!"));
         showing = false;
         schedule();
@@ -80,6 +81,16 @@ public final class KeyAll {
     }
 
     public void onJoin(Player p) {
-        if (showing) p.showBossBar(bar);
+        refresh(p);
+    }
+
+    /** La bossbar si vede solo nel prison, non nella lobby. */
+    public void refresh(Player p) {
+        refreshBar(p, showing);
+    }
+
+    private void refreshBar(Player p, boolean show) {
+        if (show && !plugin.lobby().in(p)) p.showBossBar(bar);
+        else p.hideBossBar(bar);
     }
 }

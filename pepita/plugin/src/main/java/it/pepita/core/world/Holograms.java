@@ -84,24 +84,32 @@ public final class Holograms {
         updateBoards();
         plugin.billboard().spawnAll();
         plugin.tutorial().spawnNpc();
+        plugin.lobby().spawnNpc();
     }
 
     // ---------------- Hub ----------------
 
     private void spawnHub() {
         World w = plugin.world().hub();
+        if (plugin.world().lobbyMap().active()) {
+            // mappa esterna: niente portali del plugin, solo il benvenuto sopra il secondino del Prison
+            Location n = plugin.world().hubNpc();
+            spawn("hub_benvenuto", w, n.getX(), n.getY() + 3.4, n.getZ(),
+                    "<gradient:#FFE259:#FFA751><b>BENVENUTO SU PEPITA</b></gradient>\n<gray>Usa la <yellow>bussola</yellow> per scegliere la modalità", 1.1f);
+            return;
+        }
+        // la lobby è separata dalle modalità: per ora solo il portale del Prison è attivo
+        String soon = "<dark_gray><b>✦ PROSSIMAMENTE ✦</b></dark_gray>\n<gray>Nuova modalità in arrivo";
         String[] text = {
-                "<#C9C9C9><b>⛓ PRIGIONE ⛓</b></#C9C9C9>\n<gray>Casse, incantesimi, negozio, classifiche",
-                "<#55E6FF><b>⛏ MINIERE ⛏</b></#55E6FF>\n<gray>La tua miniera migliore",
-                "<#FF5555><b>⚔ MINIERA PVP ⚔</b></#FF5555>\n<gray>Solo qui si trovano i <" + Txt.QUANTUM + ">Quantum",
-                "<gold><b>🏛 COLOSSEO DELLE CELLE 🏛</b></gold>\n<gray>Compra e arreda la tua cella"};
+                "<gradient:#FFE259:#FFA751><b>⛓ PRISON ⛓</b></gradient>\n<gray>Entra nel portale per giocare",
+                soon, soon, soon};
         for (int i = 0; i < HUB_PORTAL_LABELS.length; i++) {
             double[] l = HUB_PORTAL_LABELS[i];
             spawn("hub_portale_" + i, w, l[0], l[1], l[2], text[i], 1.4f);
         }
         spawn("hub_benvenuto", w, HUB_SPAWN[0], HUB_FLOOR + 4.6, HUB_SPAWN[2] - 3,
-                "<gradient:#FFE259:#FFA751><b>BENVENUTO SU PEPITA</b></gradient>\n<gray>Scegli un portale o usa la <yellow>bussola</yellow>\n"
-                        + "<gray>Parla con <gold>Beppe</gold> per il tutorial", 1.1f);
+                "<gradient:#FFE259:#FFA751><b>BENVENUTO SU PEPITA</b></gradient>\n<gray>Usa la <yellow>bussola</yellow> per scegliere la modalità\n"
+                        + "<gray>o parla con il secondino del <gold>Prison</gold>", 1.1f);
     }
 
     // ---------------- Prigione ----------------

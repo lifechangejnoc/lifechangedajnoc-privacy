@@ -45,7 +45,8 @@ public final class Billboard {
 
     public void spawnAll() {
         removeAll();
-        spawn(plugin.world().hub(), Layout.HUB_LOGO, 18f);
+        // con una mappa esterna la lobby resta com'è: niente logo gigante del plugin
+        if (!plugin.world().lobbyMap().active()) spawn(plugin.world().hub(), Layout.HUB_LOGO, 18f);
         spawn(plugin.world().prison(), Layout.PRISON_LOGO, 13f);
         for (Player p : Bukkit.getOnlinePlayers()) refreshView(p);
     }

@@ -166,7 +166,7 @@ public final class RankManager {
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
         p.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, p.getLocation().add(0, 1, 0), 40, 0.4, 0.8, 0.4, 0.3);
         if (d.rank == MAX_RANK) {
-            Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> ha raggiunto il rank <gold><b>Z</b></gold>!"));
+            Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> ha raggiunto il rank <gold><b>Z</b></gold>!"));
         }
         plugin.picks().refresh(p);
     }
@@ -199,7 +199,7 @@ public final class RankManager {
                 Txt.mm("<gray>+" + (int) (prestigeSoldi * 100) + "% soldi per sempre"),
                 Title.Times.times(Duration.ofMillis(300), Duration.ofMillis(2500), Duration.ofMillis(600))));
         p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
-        Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> è salito al <#D17BFF><b>Prestigio " + d.prestige + "</b></#D17BFF>!"));
+        Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<white>" + Txt.esc(p.getName()) + "</white> è salito al <#D17BFF><b>Prestigio " + d.prestige + "</b></#D17BFF>!"));
         Txt.send(p, "Ricompense: " + Txt.pepite(reward) + ", " + Txt.gemme(gems) + " e 1 <aqua>Chiave Rara</aqua>.");
         plugin.picks().refresh(p);
         p.teleport(plugin.world().prisonSpawn());
@@ -229,7 +229,7 @@ public final class RankManager {
                 Title.Times.times(Duration.ofMillis(300), Duration.ofMillis(3500), Duration.ofMillis(800))));
         p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 0.8f);
         p.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, p.getLocation(), 2);
-        Bukkit.broadcast(Txt.mm(Txt.PREFIX + "<red><b>EVASIONE!</b></red> <white>" + Txt.esc(p.getName())
+        Txt.broadcastPrison(Txt.mm(Txt.PREFIX + "<red><b>EVASIONE!</b></red> <white>" + Txt.esc(p.getName())
                 + "</white> è fuggito da Pepita per la <red>" + d.evasioni + "ª</red> volta!"));
         plugin.picks().refresh(p);
         p.teleport(plugin.world().prisonSpawn());
