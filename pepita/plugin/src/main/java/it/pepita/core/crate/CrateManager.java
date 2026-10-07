@@ -95,7 +95,7 @@ public final class CrateManager {
             }
             case BOMBA -> (int) r.amount() + "x <#FF6B6B>Bomba " + r.arg() + "<gray>";
             case SKIN_PICCONE -> PickaxeSkin.byId(r.arg()).rar.color + "Skin piccone: " + PickaxeSkin.byId(r.arg()).display;
-            case SKIN_ARMATURA -> "<white>Skin armatura: " + ArmorSkin.byId(r.arg()).display;
+            case SKIN_ARMATURA -> ArmorSkin.byId(r.arg()).rar.color + "Skin corazza: " + ArmorSkin.byId(r.arg()).display + " <gray>(un pezzo a caso)";
             case BOOSTER -> "<gold>Booster soldi x" + r.arg() + "</gold> <gray>per " + (int) r.amount() + " min";
             case INCANTESIMO -> "<#FF7B7B>+" + (int) r.amount() + " " + Enchant.byId(r.arg()).display + "<gray>";
             case PEPITA_ORO -> "<gradient:#FFF6B7:#FFA726><b>Pepita d'Oro</b></gradient>";
@@ -120,7 +120,10 @@ public final class CrateManager {
             case QUANTUM -> new ItemBuilder(Material.ECHO_SHARD).model("quantum").name("<" + Txt.QUANTUM + "><b>" + Fmt.num(r.amount()) + " Quantum</b>").build();
             case SKIN_ARMATURA -> {
                 ArmorSkin s = ArmorSkin.byId(r.arg());
-                yield new ItemBuilder(Material.LEATHER_CHESTPLATE).name("<white><b>" + s.display).lore(s.rarity).dye(s.color).build();
+                ItemBuilder b = new ItemBuilder(Material.LEATHER_CHESTPLATE).name(s.rar.color + "<b>Skin corazza: " + s.display)
+                        .lore(s.rarity, "<gray>Add-on per un pezzo a caso").dye(s.color);
+                if (s.model) b.model(s.id + "_chestplate");
+                yield b.build();
             }
             case BOOSTER -> new ItemBuilder(Material.BLAZE_POWDER).name("<gold><b>Booster x" + r.arg()).glow().build();
             case INCANTESIMO -> new ItemBuilder(Enchant.byId(r.arg()).icon).name("<#FF7B7B><b>+" + (int) r.amount() + " " + Enchant.byId(r.arg()).display).glow().build();
@@ -141,11 +144,11 @@ public final class CrateManager {
             case BOMBA -> giveItem(p, plugin.picks().bomb(r.arg(), (int) r.amount()));
             case SKIN_PICCONE -> plugin.picks().giveSkin(p, d, PickaxeSkin.byId(r.arg()));
             case SKIN_ARMATURA -> {
-                if (!d.armorSkins.add(r.arg())) {
-                    double comp = 3000;
-                    plugin.eco().give(d, it.pepita.core.economy.Economy.Cur.PEPITE, comp, "casse");
-                    text = "<gray>(skin già posseduta) " + Txt.pepite(comp);
-                }
+                // un add-on per un pezzo a caso del set
+                ArmorSkin s = ArmorSkin.byId(r.arg());
+                int piece = rnd.nextInt(4);
+                plugin.picks().giveArmorAddon(p, d, s, piece);
+                text = s.rar.color + "Skin " + it.pepita.core.pickaxe.PickaxeManager.PIECE_NAMES[piece] + " " + s.display;
             }
             case BOOSTER -> {
                 double mult = Double.parseDouble(r.arg());

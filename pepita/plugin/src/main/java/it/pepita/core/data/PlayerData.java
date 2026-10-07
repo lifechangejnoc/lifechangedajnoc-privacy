@@ -52,6 +52,10 @@ public final class PlayerData {
     public final List<String> skinDeposito = new ArrayList<>();
     /** Livelli dei 4 pezzi della corazza: elmo, corpetto, gambali, stivali (0-25). */
     public final int[] armorLevels = new int[4];
+    /** Skin add-on montata su ciascun pezzo della corazza (id di ArmorSkin; "galeotto" = nessuna). */
+    public final String[] armorSkinPieces = {"galeotto", "galeotto", "galeotto", "galeotto"};
+    /** Le skin della corazza possedute (v1, set interi) sono già state trasformate in add-on. */
+    public boolean armorSkinMigrate;
 
     // Casse (chiavi virtuali)
     public final Map<String, Integer> keys = new HashMap<>();
@@ -173,6 +177,9 @@ public final class PlayerData {
         armorLevels[1] = y.getInt("armatura.livelli.corpetto");
         armorLevels[2] = y.getInt("armatura.livelli.gambali");
         armorLevels[3] = y.getInt("armatura.livelli.stivali");
+        List<String> pieces = y.getStringList("armatura.skin-pezzi");
+        for (int i = 0; i < 4 && i < pieces.size(); i++) if (pieces.get(i) != null) armorSkinPieces[i] = pieces.get(i);
+        armorSkinMigrate = y.getBoolean("armatura.skin-migrate");
         luckyTrovati = y.getLong("lucky-trovati");
         tutorialStep = y.getInt("tutorial.passo", -1);
         tutorialCount = y.getInt("tutorial.contatore");
@@ -235,6 +242,8 @@ public final class PlayerData {
         y.set("armatura.livelli.corpetto", armorLevels[1]);
         y.set("armatura.livelli.gambali", armorLevels[2]);
         y.set("armatura.livelli.stivali", armorLevels[3]);
+        y.set("armatura.skin-pezzi", List.of(armorSkinPieces));
+        y.set("armatura.skin-migrate", armorSkinMigrate);
         y.set("lucky-trovati", luckyTrovati);
         y.set("tutorial.passo", tutorialStep);
         y.set("tutorial.contatore", tutorialCount);

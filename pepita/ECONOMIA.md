@@ -150,8 +150,42 @@ moltiplica i bonus della skin applicata (`bonus = base della skin × moltiplicat
 | Netherite → Pepita | 360 | 600.000 |
 | Pepita → Quantum | 720 | 2.500.000 |
 
-Parametri: `tier.costi-minuti`, `tier.costi-pepite`. Le skin sono oggetti staccabili: si applicano
-al piccone dal menu `/skin` e si possono riprendere senza perderle.
+Parametri: `tier.costi-minuti`, `tier.costi-pepite`.
+
+### Skin add-on
+
+Le skin non sono un semplice aspetto: sono **add-on**, oggetti separati e scambiabili che si montano
+trascinandoli sull'oggetto (o con tasto destro) e lo **potenziano**. Smontandole tornano oggetti, senza perderle.
+Il valore cresce con l'oggetto su cui sono montate, così una skin rara resta utile anche a fine gioco.
+
+**Piccone** (`bonus = base della rarità × moltiplicatore del tier`, da ×1 a Legno fino a ×3 a Quantum):
+
+| Rarità | Soldi | Pepite | Quantum | Al tier Quantum (×3) |
+|---|---|---|---|---|
+| Comune | +2% | +1% | — | +6% / +3% |
+| Rara | +4% | +2% | — | +12% / +6% |
+| Epica | +6% | +4% | +1% | +18% / +12% / +3% |
+| Leggendaria | +9% | +6% | +2% | +27% / +18% / +6% |
+| Mitica | +12% | +8% | +4% | +36% / +24% / +12% |
+
+**Corazza**: un add-on per ogni pezzo (elmo, corpetto, gambali, stivali). Si possono mischiare set diversi.
+Ogni add-on potenzia la statistica principale del pezzo su cui è montato:
+
+```
+bonus = armatura.skin.bonus-rarita × armatura.skin.peso × (1 + livello del pezzo × armatura.skin.moltiplicatore-livello)
+```
+
+| Rarità | Elmo (esperienza, peso 2) | Corpetto (soldi, peso 1) | Gambali (pepite, peso 1) | Stivali (quantum, peso 0,5) |
+|---|---|---|---|---|
+| Comune | +4% → +8% | +2% → +4% | +2% → +4% | +1% → +2% |
+| Rara | +6% → +12% | +3% → +6% | +3% → +6% | +1,5% → +3% |
+| Epica | +9% → +18% | +4,5% → +9% | +4,5% → +9% | +2,25% → +4,5% |
+| Leggendaria | +12% → +24% | +6% → +12% | +6% → +12% | +3% → +6% |
+| Mitica | +16% → +32% | +8% → +16% | +8% → +16% | +4% → +8% |
+
+(primo valore: pezzo a livello 0; secondo: pezzo a livello 25, ×2). Il bonus soldi delle skin entra nel
+moltiplicatore e quindi passa per il soft cap del §4. Dal negozio un set della corazza si compra come kit
+di 4 add-on; le casse danno un add-on per un pezzo a caso del set.
 
 ## 7. Quantum
 

@@ -32,6 +32,10 @@ public final class PickaxeManager {
     public static final String PEPITA_ORO = "pepita_oro";
     public static final String BOMB = "bomba";
     public static final String SKIN = "skin";
+    /** Skin add-on della corazza: id "skin_corazza:&lt;set&gt;:&lt;pezzo 0-3&gt;". */
+    public static final String ARMOR_SKIN = "skin_corazza";
+    /** Prefisso nel deposito delle skin per gli add-on della corazza: "corazza:&lt;set&gt;:&lt;pezzo&gt;". */
+    public static final String DEPOSIT_ARMOR = "corazza:";
 
     private final PepitaCore plugin;
 
@@ -226,6 +230,151 @@ public final class PickaxeManager {
                 + "</white> skin: trascinale sul piccone per montarle (o scambiale).");
     }
 
+    // ---------------- Skin add-on della corazza ----------------
+
+    /** Un add-on della corazza: set e pezzo (0 elmo, 1 corpetto, 2 gambali, 3 stivali). */
+    public record ArmorAddon(ArmorSkin skin, int piece) {}
+
+    private static Material leather(int piece) {
+        return switch (piece) {
+            case 0 -> Material.LEATHER_HELMET;
+            case 1 -> Material.LEATHER_CHESTPLATE;
+            case 2 -> Material.LEATHER_LEGGINGS;
+            default -> Material.LEATHER_BOOTS;
+        };
+    }
+
+    /** Pezzo (0-3) di un oggetto di cuoio della corazza, -1 se non è un pezzo. */
+    public static int pieceOf(Material m) {
+        return switch (m) {
+            case LEATHER_HELMET -> 0;
+            case LEATHER_CHESTPLATE -> 1;
+            case LEATHER_LEGGINGS -> 2;
+            case LEATHER_BOOTS -> 3;
+            default -> -1;
+        };
+    }
+
+    private static final String[] SUFFIX = {"helmet", "chestplate", "leggings", "boots"};
+
+    /** Oggetto add-on: il pezzo di cuoio con l'aspetto del set, non indossabile, da montare sulla corazza. */
+    public ItemStack armorAddonItem(ArmorSkin s, int piece, PlayerData d) {
+        ArmorService as = plugin.armor();
+        List<String> lore = new ArrayList<>();
+        lore.add(s.rarity + (s.model ? " <dark_gray>• <gray>3D" : "") + " <dark_gray>• <gray>Add-on per " + PIECE_NAMES[piece].toLowerCase());
+        lore.add("<gray>" + s.desc);
+        lore.add("");
+        lore.add("<gray>Potenzia il pezzo su cui è montata:");
+        lore.add("  " + ArmorService.mainStat(piece) + " +" + Fmt.pct(as.skinBase(s, piece)) + " <dark_gray>(base)");
+        lore.add("<dark_gray>× (1 + " + Fmt.pct(as.skinLevelMult(1) - 1) + " per livello del pezzo)");
+        if (d != null) lore.add("<gray>Sul tuo " + PIECE_NAMES[piece].toLowerCase() + " (lv " + d.armorLevels[piece] + "): " + ArmorService.mainStat(piece)
+                + " +" + Fmt.pct(as.skinBonus(s, piece, d.armorLevels[piece])));
+        lore.add("");
+        lore.add("<#FFD54A>▶ Trascinala sul " + PIECE_NAMES[piece].toLowerCase() + " della corazza");
+        lore.add("<#FFD54A>▶ oppure tasto destro per montarla");
+        lore.add("<dark_gray>Si può scambiare con altri giocatori.");
+        ItemBuilder b = new ItemBuilder(leather(piece)).name(s.rar.color + "<b>Skin: " + PIECE_NAMES[piece] + " " + s.display)
+                .lore(lore).dye(s.color).id(ARMOR_SKIN + ":" + s.id + ":" + piece).glow();
+        if (s.model) b.model(s.id + "_" + SUFFIX[piece]);
+        ItemStack it = b.build();
+        // è solo un add-on: non si indossa e non dà punti armatura
+        it.unsetData(DataComponentTypes.EQUIPPABLE);
+        it.unsetData(DataComponentTypes.ATTRIBUTE_MODIFIERS);
+        return it;
+    }
+
+    public static ArmorAddon addonOf(ItemStack it) {
+        String id = ItemBuilder.idOf(it);
+        if (id == null || !id.startsWith(ARMOR_SKIN + ":")) return null;
+        return parseAddon(id.substring(ARMOR_SKIN.length() + 1));
+    }
+
+    /** "set:pezzo" → add-on (null se non valido o GALEOTTO). */
+    public static ArmorAddon parseAddon(String v) {
+        int c = v.lastIndexOf(':');
+        if (c < 0) return null;
+        ArmorSkin s = ArmorSkin.byIdOrNull(v.substring(0, c));
+        int piece;
+        try {
+            piece = Integer.parseInt(v.substring(c + 1));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        if (s == null || s == ArmorSkin.GALEOTTO || piece < 0 || piece > 3) return null;
+        return new ArmorAddon(s, piece);
+    }
+
+    /** Dà un add-on della corazza; se l'inventario è pieno finisce nel deposito delle skin. */
+    public void giveArmorAddon(Player p, PlayerData d, ArmorSkin s, int piece) {
+        if (s == null || s == ArmorSkin.GALEOTTO) return;
+        if (p != null && p.isOnline() && p.getInventory().firstEmpty() >= 0) {
+            var left = p.getInventory().addItem(armorAddonItem(s, piece, d));
+            if (left.isEmpty()) return;
+        }
+        d.skinDeposito.add(DEPOSIT_ARMOR + s.id + ":" + piece);
+        d.dirty = true;
+        if (p != null) Txt.send(p, "Inventario pieno: la skin <white>" + PIECE_NAMES[piece] + " " + s.display + "</white> è nel deposito (<yellow>/skin</yellow>).");
+    }
+
+    /** Dà i 4 add-on di un set (elmo, corpetto, gambali, stivali). */
+    public void giveArmorSet(Player p, PlayerData d, ArmorSkin s) {
+        for (int i = 0; i < 4; i++) giveArmorAddon(p, d, s, i);
+    }
+
+    /** Oggetto del deposito (skin del piccone o add-on della corazza). */
+    public ItemStack depositItem(String entry, PlayerData d) {
+        if (entry.startsWith(DEPOSIT_ARMOR)) {
+            ArmorAddon a = parseAddon(entry.substring(DEPOSIT_ARMOR.length()));
+            return a == null ? null : armorAddonItem(a.skin(), a.piece(), d);
+        }
+        PickaxeSkin s = PickaxeSkin.byIdOrNull(entry);
+        return s == null || s == PickaxeSkin.CLASSICO ? null : skinItem(s, 1);
+    }
+
+    /** Monta un add-on su un pezzo della corazza (quello vecchio torna come oggetto). */
+    public void mountArmorAddon(Player p, PlayerData d, ArmorSkin s, int piece) {
+        ArmorSkin old = ArmorService.skinOn(d, piece);
+        d.armorSkinPieces[piece] = s.id;
+        d.dirty = true;
+        if (old != ArmorSkin.GALEOTTO && old != s) giveArmorAddon(p, d, old, piece);
+        applyArmor(p, d);
+        p.playSound(p.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 0.8f, 1.3f);
+        Txt.send(p, "Skin montata sul " + PIECE_NAMES[piece].toLowerCase() + ": " + s.rar.color + s.display + " <gray>("
+                + Txt.plain(Txt.mm(ArmorService.mainStat(piece))) + " +" + Fmt.pct(plugin.armor().skinBonus(s, piece, d.armorLevels[piece])) + ")");
+        plugin.tutorial().onEvent(p, it.pepita.core.tutorial.Tutorial.Ev.SKIN, 1);
+    }
+
+    public void unmountArmorAddon(Player p, PlayerData d, int piece) {
+        ArmorSkin old = ArmorService.skinOn(d, piece);
+        if (old == ArmorSkin.GALEOTTO) return;
+        d.armorSkinPieces[piece] = ArmorSkin.GALEOTTO.id;
+        d.dirty = true;
+        giveArmorAddon(p, d, old, piece);
+        applyArmor(p, d);
+        Txt.send(p, "Hai smontato la skin <white>" + PIECE_NAMES[piece] + " " + old.display + "</white>: ora è un oggetto.");
+    }
+
+    /** Prima volta con le skin add-on: il set indossato va su tutti i pezzi, gli altri set posseduti diventano oggetti. */
+    public void migrateArmorSkins(Player p, PlayerData d) {
+        if (d.armorSkinMigrate) return;
+        ArmorSkin worn = ArmorSkin.byId(d.armorSkin);
+        for (int i = 0; i < 4; i++) if (ArmorService.skinOn(d, i) == ArmorSkin.GALEOTTO) d.armorSkinPieces[i] = worn.id;
+        int n = 0;
+        for (String id : new ArrayList<>(d.armorSkins)) {
+            ArmorSkin s = ArmorSkin.byIdOrNull(id);
+            if (s == null || s == ArmorSkin.GALEOTTO || s == worn) continue;
+            giveArmorSet(p, d, s);
+            n++;
+        }
+        d.armorSkins.clear();
+        d.armorSkins.add(ArmorSkin.GALEOTTO.id);
+        d.armorSkinMigrate = true;
+        d.dirty = true;
+        if (n > 0 || worn != ArmorSkin.GALEOTTO)
+            Txt.send(p, "Novità: le skin della corazza ora sono <white>add-on</white>, una per pezzo, e potenziano il pezzo su cui le monti!"
+                    + (n > 0 ? " Ti abbiamo dato le skin di <white>" + n + "</white> set: trascinale sui pezzi della corazza." : ""));
+    }
+
     // ---------------- Corazza ----------------
 
     public static final String[] PIECE_NAMES = {"Elmo", "Corpetto", "Gambali", "Stivali"};
@@ -258,7 +407,8 @@ public final class PickaxeManager {
         int lvl = d == null ? 0 : d.armorLevels[idx];
         ArmorService as = plugin.armor();
         List<String> lore = new ArrayList<>();
-        lore.add("<gray>" + skin.display + " <dark_gray>• " + skin.rarity);
+        if (skin == ArmorSkin.GALEOTTO) lore.add("<gray>" + skin.display + " <dark_gray>• <gray>nessuna skin add-on");
+        else lore.add("<gray>Skin: " + skin.rar.color + skin.display + " <dark_gray>• " + skin.rarity);
         lore.add("<gray>Livello <" + Txt.QUANTUM + ">" + lvl + "</" + Txt.QUANTUM + "><dark_gray>/" + as.maxLevel() + " "
                 + Txt.bar(lvl / (double) as.maxLevel(), 10, Txt.QUANTUM, "#3A2A4A"));
         lore.add("");
@@ -268,8 +418,11 @@ public final class PickaxeManager {
         lore.add("  <#FFB86B>+" + Fmt.pct(b[ArmorService.XP]) + " <gray>Esperienza piccone");
         lore.add("  <" + Txt.PEPITE + ">+" + Fmt.pct(b[ArmorService.PEPITE]) + " <gray>Pepite");
         if (b[ArmorService.QUANTUM] > 0 || idx == 3) lore.add("  <" + Txt.QUANTUM + ">+" + Fmt.pct(b[ArmorService.QUANTUM]) + " <gray>Quantum");
+        if (skin != ArmorSkin.GALEOTTO) lore.add("  " + ArmorService.mainStat(idx) + " +" + Fmt.pct(as.skinBonus(skin, idx, lvl)) + " <dark_gray>(skin x"
+                + Fmt.num(as.skinLevelMult(lvl)) + ")");
         lore.add("");
         lore.add(lvl >= as.maxLevel() ? "<gold>✔ Livello massimo" : "<#B98CFF>▶ Clicca per migliorare la corazza");
+        lore.add("<#FFD54A>▶ Trascina qui una skin add-on per montarla");
         ItemBuilder ib = new ItemBuilder(m)
                 .name("<gradient:#3FE0F0:#D15BFF><b>" + PIECE_NAMES[idx] + " della Corazza</b></gradient> <gray>[" + lvl + "]")
                 .lore(lore).unbreakable().id(ARMOR).dye(skin.color);
@@ -333,6 +486,7 @@ public final class PickaxeManager {
             d.dirty = true;
         }
         migrateSkins(p, d);
+        migrateArmorSkins(p, d);
         PlayerInventory inv = p.getInventory();
         boolean hasPick = false, hasMenu = false, hasSel = false;
         for (ItemStack it : inv.getContents()) {
@@ -357,15 +511,14 @@ public final class PickaxeManager {
         return it == null || it.getType().isAir();
     }
 
-    /** Indossa la corazza con il set scelto (sostituisce solo i pezzi della corazza o slot vuoti). */
+    /** Indossa la corazza con la skin add-on di ogni pezzo (sostituisce solo i pezzi della corazza o slot vuoti). */
     public void applyArmor(Player p, PlayerData d) {
-        ArmorSkin skin = ArmorSkin.byId(d.armorSkin);
         boolean pack = d.hasPack;
         PlayerInventory inv = p.getInventory();
-        if (isEmpty(inv.getHelmet()) || ItemBuilder.is(inv.getHelmet(), ARMOR)) inv.setHelmet(armorPiece(EquipmentSlot.HEAD, skin, pack, d));
-        if (isEmpty(inv.getChestplate()) || ItemBuilder.is(inv.getChestplate(), ARMOR)) inv.setChestplate(armorPiece(EquipmentSlot.CHEST, skin, pack, d));
-        if (isEmpty(inv.getLeggings()) || ItemBuilder.is(inv.getLeggings(), ARMOR)) inv.setLeggings(armorPiece(EquipmentSlot.LEGS, skin, pack, d));
-        if (isEmpty(inv.getBoots()) || ItemBuilder.is(inv.getBoots(), ARMOR)) inv.setBoots(armorPiece(EquipmentSlot.FEET, skin, pack, d));
+        if (isEmpty(inv.getHelmet()) || ItemBuilder.is(inv.getHelmet(), ARMOR)) inv.setHelmet(armorPiece(EquipmentSlot.HEAD, ArmorService.skinOn(d, 0), pack, d));
+        if (isEmpty(inv.getChestplate()) || ItemBuilder.is(inv.getChestplate(), ARMOR)) inv.setChestplate(armorPiece(EquipmentSlot.CHEST, ArmorService.skinOn(d, 1), pack, d));
+        if (isEmpty(inv.getLeggings()) || ItemBuilder.is(inv.getLeggings(), ARMOR)) inv.setLeggings(armorPiece(EquipmentSlot.LEGS, ArmorService.skinOn(d, 2), pack, d));
+        if (isEmpty(inv.getBoots()) || ItemBuilder.is(inv.getBoots(), ARMOR)) inv.setBoots(armorPiece(EquipmentSlot.FEET, ArmorService.skinOn(d, 3), pack, d));
     }
 
     /** Ricostruisce il piccone nell'inventario con i dati aggiornati. */

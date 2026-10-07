@@ -10,7 +10,7 @@ Cosa contiene il plugin
     pepita_miniere  le miniere A–Z (29x29, profonde 30) su isole a 8 temi
     pepita_pvp      la Miniera PvP dei Quantum (zona sicura al centro, PvP intorno)
     pepita_celle    il colosseo delle celle (10 piani x 32 settori, porte di ferro, ascensori)
-- Rank A–Z, prestigio, evasione, incantesimi, tier del piccone (8) e skin come oggetti,
+- Rank A–Z, prestigio, evasione, incantesimi, tier del piccone (8), skin add-on per piccone e corazza,
   Quantum, corazza potenziabile (0–25), celle, lucky block, battle pass (50 livelli),
   traguardi, keyall casuale, Corsa all'Oro, casse, gang, negozio gemme, TAB e scoreboard.
 - L'economia è spiegata in ECONOMIA.md (formule, tabelle, come leggere i log).
@@ -60,6 +60,8 @@ Aggiornamento dalla v1
   restano, le coordinate passano al nuovo mondo pepita_miniere.
 - La vecchia prigione nel mondo "pepita" viene ripulita e ricostruita nel nuovo stile.
 - Le skin del piccone possedute diventano oggetti nell'inventario al primo accesso.
+- Le skin della corazza: il set indossato viene montato su tutti e 4 i pezzi, gli altri set
+  posseduti diventano 4 add-on ciascuno (se l'inventario è pieno finiscono nel deposito di /skin).
 - I giocatori della v1 partono con il piccone al tier Diamante (i nuovi da Legno).
 
 Impostazioni utili del server
@@ -94,9 +96,15 @@ Miniere e progressione
 Piccone e corazza
   /incantesimi  (/e)               potenzia il piccone (pepite e Quantum)
   /tier  (/potenzia)               porta il piccone al tier successivo
-  /skin                            applica o togli le skin di piccone e corazza
+  /skin                            skin add-on di piccone e corazza (compra, smonta, ritira dal deposito)
   /corazza  (/armatura)            potenzia la corazza con i Quantum
   /quantum  (/q)                   i tuoi Quantum (e quelli ancora in tasca)
+
+  Skin add-on: le skin sono oggetti separati. Trascinale sul piccone o sul pezzo giusto della
+  corazza (elmo, corpetto, gambali, stivali), oppure tienile in mano e fai tasto destro.
+  Cambiano l'aspetto e potenziano l'oggetto: sul piccone soldi/pepite/quantum (× tier del piccone),
+  sulla corazza la statistica del pezzo (elmo esperienza, corpetto soldi, gambali pepite,
+  stivali quantum, × livello del pezzo). Si smontano da /skin e tornano oggetti; si possono scambiare.
 
 Soldi e premi
   /soldi  [giocatore]  (/bal)      soldi, pepite e gemme
@@ -140,7 +148,8 @@ Economia e giocatori
   /pa rank <giocatore> <A-Z>
   /pa prestigio <giocatore> <n>
   /pa incantesimo <giocatore> <id> <livello>
-  /pa skin <giocatore> <id>
+  /pa skin <giocatore> <id> [piccone|corazza|elmo|corpetto|gambali|stivali]
+                                                 (corazza = kit dei 4 add-on del set)
   /pa oggetto <giocatore> <pepita|bomba|grande|nucleare> [n]
   /pa tier <giocatore> <0-7>
   /pa corazza <giocatore> <0-3> <livello>       (0 elmo, 1 corpetto, 2 gambali, 3 stivali)

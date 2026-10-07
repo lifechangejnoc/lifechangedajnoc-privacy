@@ -53,7 +53,7 @@ public final class Tutorial implements Listener {
             new Step(Ev.RANKUP, 1, "Sali di rank", "Scrivi <yellow>/rankup</yellow>: ogni rank sblocca una miniera migliore. Il primo te lo offro io!"),
             new Step(Ev.ENCHANT, 1, "Incantesimi", "Tasto destro col piccone e compra un <gold>incantesimo</gold> con le Pepite (ti ho dato qualche Pepita)."),
             new Step(Ev.CRATE, 1, "Le casse", "Apri una <gold>cassa</gold> con <yellow>/casse</yellow>: hai già delle chiavi."),
-            new Step(Ev.SKIN, 1, "Le skin", "Le skin sono oggetti: apri <yellow>/skin</yellow> o trascina una skin sul piccone. Eccone una in regalo!"),
+            new Step(Ev.SKIN, 1, "Le skin", "Le skin sono add-on: trascinale sul piccone o su un pezzo della corazza e lo potenziano. Apri <yellow>/skin</yellow>. Eccone una in regalo!"),
             new Step(Ev.PVP, 1, "Quantum e PvP", "Visita la <red>Miniera PvP</red> (portale rosso nell'hub): lì si trovano i <aqua>Quantum</aqua>. Attento agli altri!"),
             new Step(Ev.CELLS, 1, "Le celle", "Visita il <gold>Colosseo delle Celle</gold> (portale nell'hub o <yellow>/cella</yellow>): puoi comprarne una e arredarla."),
             new Step(Ev.PASS, 1, "Battle pass", "Apri il <gold>Battle Pass</gold> con <yellow>/battlepass</yellow>: missioni giornaliere e premi a ogni livello."),

@@ -12,6 +12,7 @@ import it.pepita.core.mine.Mine;
 import it.pepita.core.pickaxe.Enchant;
 import it.pepita.core.pickaxe.MiningService;
 import it.pepita.core.pickaxe.PickTier;
+import it.pepita.core.pickaxe.PickaxeManager;
 import it.pepita.core.rank.RankManager;
 import it.pepita.core.rank.VipTier;
 import it.pepita.core.tutorial.Tutorial;
@@ -732,8 +733,10 @@ public final class Menus {
             withdraw(p, d);
             skins(p);
         });
-        m.set(42, Gui.button(p, "gui_armatura", Material.LEATHER_CHESTPLATE).dye(ArmorSkin.byId(d.armorSkin).color).name("<#FF7BD1><b>Aspetto della corazza</b>")
-                .lore("<gray>18 set tra cui scegliere.", "", click("Click per aprire")).build(), e -> armorSkins(p));
+        m.set(42, Gui.button(p, "gui_armatura", Material.LEATHER_CHESTPLATE).dye(it.pepita.core.armor.ArmorService.skinOn(d, 1).color)
+                .name("<#FF7BD1><b>Skin della corazza</b>")
+                .lore("<gray>Add-on per elmo, corpetto,", "<gray>gambali e stivali: cambiano", "<gray>l'aspetto e potenziano il pezzo.", "",
+                        click("Click per aprire")).build(), e -> armorSkins(p));
         m.set(45, Gui.back(p), e -> main(p));
         m.set(53, Gui.close(p), e -> p.closeInventory());
         m.frame();
@@ -747,9 +750,9 @@ public final class Menus {
     private void withdraw(Player p, PlayerData d) {
         int n = 0;
         while (!d.skinDeposito.isEmpty() && p.getInventory().firstEmpty() >= 0) {
-            PickaxeSkin s = PickaxeSkin.byIdOrNull(d.skinDeposito.removeFirst());
-            if (s != null) {
-                p.getInventory().addItem(plugin.picks().skinItem(s, 1));
+            ItemStack item = plugin.picks().depositItem(d.skinDeposito.removeFirst(), d);
+            if (item != null) {
+                p.getInventory().addItem(item);
                 n++;
             }
         }
@@ -760,36 +763,82 @@ public final class Menus {
 
     public void armorSkins(Player p) {
         PlayerData d = plugin.data().get(p);
-        Menu m = new Menu(5, "Aspetto della corazza").emblem(Gui.Emblem.ARMATURA);
-        int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
-        int i = 0;
-        for (ArmorSkin s : ArmorSkin.values()) {
-            if (i >= slots.length) break;
-            boolean owned = d.armorSkins.contains(s.id);
-            boolean active = d.armorSkin.equals(s.id);
-            ItemBuilder b = new ItemBuilder(Material.LEATHER_CHESTPLATE).dye(s.color).name((active ? "<green><b>" : "<white><b>") + s.display);
-            if (d.hasPack && s.model) b.model(s.id + "_chestplate");
-            m.set(slots[i++], b.lore(s.rarity + (s.model ? " <dark_gray>• <gray>3D" : ""), "<gray>" + s.desc, "",
-                    active ? "<green>✔ Indossata" : owned ? click("Click per indossarla") : s.price > 0 ? "<gray>Prezzo: " + Txt.gemme(s.price) : "<gray>Solo dalle casse",
-                    owned || s.price <= 0 ? "" : click("Click per acquistare")).glow(active).build(), e -> {
-                if (owned) {
-                    d.armorSkin = s.id;
-                    d.dirty = true;
-                    plugin.picks().applyArmor(p, d);
-                    Txt.send(p, "Aspetto della corazza: <white>" + s.display);
-                    armorSkins(p);
-                } else if (s.price > 0) {
-                    purchase(p, "Corazza " + s.display, s.price, () -> {
-                        d.armorSkins.add(s.id);
-                        d.armorSkin = s.id;
-                        plugin.picks().applyArmor(p, d);
-                    }, () -> armorSkins(p));
-                }
+        it.pepita.core.armor.ArmorService as = plugin.armor();
+        Menu m = new Menu(6, "Skin della corazza").emblem(Gui.Emblem.ARMATURA);
+        m.set(4, Gui.button(p, "gui_info", Material.BOOK).name("<#FF7BD1><b>Skin add-on</b>")
+                .lore("<gray>Ogni skin è un <white>oggetto</white> per un solo pezzo:", "<gray>trascinala sul pezzo della corazza (o tasto destro)",
+                        "<gray>per montarla. Cambia l'aspetto del pezzo e ne", "<gray>potenzia la statistica principale:",
+                        "  <#FFB86B>Elmo</#FFB86B> <dark_gray>→</dark_gray> " + it.pepita.core.armor.ArmorService.mainStat(0),
+                        "  <" + Txt.SOLDI + ">Corpetto</" + Txt.SOLDI + "> <dark_gray>→</dark_gray> " + it.pepita.core.armor.ArmorService.mainStat(1),
+                        "  <" + Txt.PEPITE + ">Gambali</" + Txt.PEPITE + "> <dark_gray>→</dark_gray> " + it.pepita.core.armor.ArmorService.mainStat(2),
+                        "  <" + Txt.QUANTUM + ">Stivali</" + Txt.QUANTUM + "> <dark_gray>→</dark_gray> " + it.pepita.core.armor.ArmorService.mainStat(3),
+                        "<gray>Bonus = base della rarità × livello del pezzo.", "<gray>Si possono mischiare set diversi!").build());
+        int[] worn = {10, 12, 14, 16};
+        for (int i = 0; i < 4; i++) {
+            final int piece = i;
+            ArmorSkin cur = it.pepita.core.armor.ArmorService.skinOn(d, i);
+            ItemStack icon = plugin.picks().armorPiece(PickaxeManager.SLOTS[i], cur, d.hasPack, d);
+            List<String> lore = new ArrayList<>();
+            lore.add("<gray>Livello del pezzo: <" + Txt.QUANTUM + ">" + d.armorLevels[i] + "</" + Txt.QUANTUM + "> <dark_gray>(skin x" + Fmt.num(as.skinLevelMult(d.armorLevels[i])) + ")");
+            if (cur == ArmorSkin.GALEOTTO) {
+                lore.add("<gray>Skin: <dark_gray>nessuna");
+                lore.add("");
+                lore.add("<gray>Trascina una skin da " + PickaxeManager.PIECE_NAMES[i].toLowerCase() + " sul pezzo.");
+            } else {
+                lore.add("<gray>Skin: " + cur.rar.color + cur.display);
+                lore.add("  " + it.pepita.core.armor.ArmorService.mainStat(i) + " +" + Fmt.pct(as.skinBonus(cur, i, d.armorLevels[i])));
+                lore.add("");
+                lore.add(click("Click per smontarla (torna un oggetto)"));
+            }
+            icon.editMeta(meta -> {
+                meta.itemName(Txt.item("<white><b>" + PickaxeManager.PIECE_NAMES[piece] + "</b>"));
+                meta.lore(Txt.lore(lore));
+            });
+            m.set(worn[i], icon, e -> {
+                plugin.picks().unmountArmorAddon(p, d, piece);
+                armorSkins(p);
             });
         }
-        m.set(36, Gui.back(p), e -> skins(p));
-        m.set(40, Gui.button(p, "gui_quantum", Material.AMETHYST_CLUSTER).name("<gradient:#3FE0F0:#D15BFF><b>Potenzia la corazza</b></gradient>")
-                .lore("", click("Click per aprire")).build(), e -> plugin.armor().open(p));
+        int[] slots = {19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40, 41, 42, 43};
+        int i = 0;
+        for (ArmorSkin s : ArmorSkin.values()) {
+            if (s == ArmorSkin.GALEOTTO || i >= slots.length) continue;
+            int inInv = 0;
+            for (ItemStack item : p.getInventory().getContents()) {
+                PickaxeManager.ArmorAddon a = PickaxeManager.addonOf(item);
+                if (a != null && a.skin() == s) inInv++;
+            }
+            int mounted = 0;
+            for (int k = 0; k < 4; k++) if (it.pepita.core.armor.ArmorService.skinOn(d, k) == s) mounted++;
+            ItemBuilder b = new ItemBuilder(Material.LEATHER_CHESTPLATE).dye(s.color).name(s.rar.color + "<b>" + s.display);
+            if (d.hasPack && s.model) b.model(s.id + "_chestplate");
+            List<String> lore = new ArrayList<>();
+            lore.add(s.rarity + (s.model ? " <dark_gray>• <gray>3D" : ""));
+            lore.add("<gray>" + s.desc);
+            lore.add("");
+            lore.add("<gray>Sui tuoi pezzi:");
+            for (int k = 0; k < 4; k++)
+                lore.add("  <gray>" + PickaxeManager.PIECE_NAMES[k] + ": " + it.pepita.core.armor.ArmorService.mainStat(k) + " +" + Fmt.pct(as.skinBonus(s, k, d.armorLevels[k])));
+            lore.add("");
+            if (mounted > 0) lore.add("<green>✔ Montata su " + mounted + (mounted == 1 ? " pezzo" : " pezzi"));
+            if (inInv > 0) lore.add("<gray>Nel tuo inventario: <white>" + inInv);
+            lore.add(s.price > 0 ? "<gray>Kit di 4 add-on: " + Txt.gemme(s.price) : "<gray>Solo da casse, battle pass e traguardi");
+            if (s.price > 0) lore.add(click("Click per comprare il kit (4 oggetti)"));
+            m.set(slots[i++], b.lore(lore).glow(mounted > 0).build(), e -> {
+                if (s.price <= 0) return;
+                purchase(p, "Kit skin " + s.display, s.price, () -> plugin.picks().giveArmorSet(p, d, s), () -> armorSkins(p));
+            });
+        }
+        m.set(45, Gui.back(p), e -> skins(p));
+        m.set(48, Gui.button(p, "gui_casse", Material.ENDER_CHEST).name("<gold><b>Deposito skin</b>")
+                .lore("<gray>Skin in attesa: <white>" + d.skinDeposito.size(), "", d.skinDeposito.isEmpty() ? "<dark_gray>Vuoto" : click("Click per ritirarle"))
+                .glow(!d.skinDeposito.isEmpty()).build(), e -> {
+            withdraw(p, d);
+            armorSkins(p);
+        });
+        m.set(50, Gui.button(p, "gui_quantum", Material.AMETHYST_CLUSTER).name("<gradient:#3FE0F0:#D15BFF><b>Potenzia la corazza</b></gradient>")
+                .lore("<gray>Più livello ha il pezzo,", "<gray>più rende la skin montata.", "", click("Click per aprire")).build(), e -> plugin.armor().open(p));
+        m.set(53, Gui.close(p), e -> p.closeInventory());
         m.frame();
         m.open(p);
     }

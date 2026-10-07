@@ -103,6 +103,23 @@ armatura:
     esperienza: 0.012
     pepite: 0.006
     quantum: 0.008
+  # Skin add-on della corazza: un oggetto per pezzo (elmo, corpetto, gambali, stivali) da trascinare sul pezzo.
+  # Potenzia la statistica principale del pezzo (elmo=esperienza, corpetto=soldi, gambali=pepite, stivali=quantum):
+  # bonus = bonus-rarita x peso x (1 + livello del pezzo x moltiplicatore-livello)
+  skin:
+    bonus-rarita:
+      comune: 0.02
+      rara: 0.03
+      epica: 0.045
+      leggendaria: 0.06
+      mitica: 0.08
+    peso:
+      esperienza: 2.0
+      soldi: 1.0
+      pepite: 1.0
+      quantum: 0.5
+    # 0.04 = +4% per livello: al livello 25 la skin rende il doppio
+    moltiplicatore-livello: 0.04
 
 celle:
   # Prezzo = minuti di scavo: base + piano * costo-minuti-piano (piano 0 = il più basso)

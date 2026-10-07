@@ -228,7 +228,7 @@ public final class Commands implements TabExecutor {
             Txt.raw(s, "<yellow>/pa togli <giocatore> <soldi|pepite|gemme|quantum> <n>");
             Txt.raw(s, "<yellow>/pa chiave <giocatore> <comune|rara|leggendaria|pepita> <n>");
             Txt.raw(s, "<yellow>/pa vip <giocatore> <0-4>   /pa rank <giocatore> <A-Z>   /pa prestigio <giocatore> <n>");
-            Txt.raw(s, "<yellow>/pa incantesimo <giocatore> <id> <livello>   /pa skin <giocatore> <id>");
+            Txt.raw(s, "<yellow>/pa incantesimo <giocatore> <id> <livello>   /pa skin <giocatore> <id> [piccone|corazza|elmo|corpetto|gambali|stivali]");
             Txt.raw(s, "<yellow>/pa oggetto <giocatore> <pepita|bomba|grande|nucleare> [n]");
             Txt.raw(s, "<yellow>/pa booster <moltiplicatore> <minuti>   /pa corsa [secondi]");
             Txt.raw(s, "<yellow>/pa reset <miniera|tutte>   /pa ricostruisci <hub|prigione|miniere|pvp|celle|tutti>");
@@ -316,12 +316,23 @@ public final class Commands implements TabExecutor {
                 Txt.send(s, e.display + " impostato.");
             }
             case "skin" -> {
-                if (a.length < 3) return true;
+                if (a.length < 3) { Txt.send(s, "Uso: /pa skin <giocatore> <id> [piccone|corazza|elmo|corpetto|gambali|stivali]"); return true; }
                 PlayerData t = plugin.data().getAny(a[1]);
-                if (t == null) return true;
+                if (t == null) { Txt.send(s, "Giocatore non trovato."); return true; }
                 Player op = Bukkit.getPlayerExact(t.name);
-                if (PickaxeSkin.byIdOrNull(a[2]) != null) plugin.picks().giveSkin(op, t, PickaxeSkin.byIdOrNull(a[2]));
-                else if (ArmorSkin.byIdOrNull(a[2]) != null) t.armorSkins.add(a[2].toLowerCase());
+                PickaxeSkin ps = PickaxeSkin.byIdOrNull(a[2]);
+                ArmorSkin as = ArmorSkin.byIdOrNull(a[2]);
+                String what = a.length > 3 ? a[3].toLowerCase(Locale.ROOT) : ps != null ? "piccone" : "corazza";
+                int piece = switch (what) {
+                    case "elmo" -> 0;
+                    case "corpetto" -> 1;
+                    case "gambali" -> 2;
+                    case "stivali" -> 3;
+                    default -> -1;
+                };
+                if (what.equals("piccone") && ps != null && ps != PickaxeSkin.CLASSICO) plugin.picks().giveSkin(op, t, ps);
+                else if (as != null && as != ArmorSkin.GALEOTTO && what.equals("corazza")) plugin.picks().giveArmorSet(op, t, as);
+                else if (as != null && as != ArmorSkin.GALEOTTO && piece >= 0) plugin.picks().giveArmorAddon(op, t, as, piece);
                 else { Txt.send(s, "Skin non trovata."); return true; }
                 plugin.data().saveAny(t);
                 Txt.send(s, "Skin data.");
@@ -515,13 +526,13 @@ public final class Commands implements TabExecutor {
                         case "incantesimo" -> Arrays.stream(Enchant.values()).forEach(e -> out.add(e.id));
                         case "skin" -> {
                             Arrays.stream(PickaxeSkin.values()).forEach(x -> out.add(x.id));
-                            Arrays.stream(ArmorSkin.values()).forEach(x -> out.add(x.id));
+                            Arrays.stream(ArmorSkin.values()).filter(x -> !out.contains(x.id)).forEach(x -> out.add(x.id));
                         }
                         case "oggetto" -> out.addAll(List.of("pepita", "bomba", "grande", "nucleare"));
                         default -> {
                         }
                     }
-                }
+                } else if (a.length == 4 && a[0].equalsIgnoreCase("skin")) out.addAll(List.of("piccone", "corazza", "elmo", "corpetto", "gambali", "stivali"));
             }
             default -> {
             }

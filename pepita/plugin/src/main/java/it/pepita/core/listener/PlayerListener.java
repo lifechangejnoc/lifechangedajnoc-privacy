@@ -316,6 +316,18 @@ public final class PlayerListener implements Listener {
                             plugin.mining().throwBomb(p, hand, id.substring(id.indexOf(':') + 1));
                             return;
                         }
+                        PickaxeManager.ArmorAddon addon = PickaxeManager.addonOf(hand);
+                        if (addon != null) {
+                            e.setCancelled(true);
+                            PlayerData d = plugin.data().get(p);
+                            if (it.pepita.core.armor.ArmorService.skinOn(d, addon.piece()) == addon.skin()) {
+                                Txt.send(p, "Questa skin è già montata sul " + PickaxeManager.PIECE_NAMES[addon.piece()].toLowerCase() + ".");
+                                return;
+                            }
+                            hand.setAmount(hand.getAmount() - 1);
+                            plugin.picks().mountArmorAddon(p, d, addon.skin(), addon.piece());
+                            return;
+                        }
                         PickaxeSkin s = PickaxeManager.skinOf(hand);
                         if (s != null) {
                             e.setCancelled(true);
