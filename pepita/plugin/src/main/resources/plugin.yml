@@ -1,0 +1,123 @@
+name: PepitaCore
+version: '${project.version}'
+main: it.pepita.core.PepitaCore
+api-version: '26.2'
+author: Pepita
+description: Il prison tutto-in-uno del server Pepita (mondi separati, miniere, rank, incantesimi, Quantum, celle, battle pass, casse, gang, Corsa all'Oro).
+website: pepitamc.it
+load: POSTWORLD
+
+commands:
+  menu:
+    description: Apre il menu di Pepita
+    aliases: [m, pepitamenu]
+  miniere:
+    description: Menu delle miniere
+    aliases: [mines, warps]
+  miniera:
+    description: Vai alla tua miniera migliore o a una miniera
+    aliases: [mine]
+  spawn:
+    description: Torna all'hub
+    aliases: [hub, lobby]
+  prigione:
+    description: Vai nel cortile della prigione
+    aliases: [prison, cortile]
+  pvp:
+    description: Vai nella Miniera PvP dei Quantum
+    aliases: [minierapvp]
+  cella:
+    description: Le celle del colosseo
+    aliases: [celle, cell, cells, colosseo]
+  selettore:
+    description: Menu dei viaggi
+    aliases: [viaggi, viaggio]
+  tutorial:
+    description: Il tutorial di Beppe il Secondino
+    aliases: [guida]
+  battlepass:
+    description: Battle pass e missioni
+    aliases: [bp, pass, missioni]
+  traguardi:
+    description: Premi per i blocchi rotti
+    aliases: [milestones, traguardo]
+  quantum:
+    description: I tuoi Quantum
+    aliases: [q]
+  corazza:
+    description: Potenzia la corazza con i Quantum
+    aliases: [armatura, armor]
+  tier:
+    description: Potenzia il tier del piccone
+    aliases: [potenzia]
+  keyall:
+    description: Tempo al prossimo keyall
+  rankup:
+    description: Sali di rank
+    aliases: [ru]
+  rankupmax:
+    description: Sali di rank al massimo
+    aliases: [rum, maxrankup, mru]
+  prestigio:
+    description: Prestigio
+    aliases: [prestige]
+  evasione:
+    description: Evasione (rebirth)
+    aliases: [rebirth]
+  piccone:
+    description: Riprendi piccone, bussola e corazza
+    aliases: [pickaxe, pick, kit]
+  incantesimi:
+    description: Incantesimi del piccone
+    aliases: [enchant, enchants, e]
+  soldi:
+    description: Mostra i soldi
+    aliases: [bal, balance, money, saldo]
+  pepite:
+    description: Pepite
+    aliases: [tokens, token]
+  gemme:
+    description: Gemme
+    aliases: [gems]
+  paga:
+    description: Paga un giocatore (tassa 5%)
+    aliases: [pay]
+  top:
+    description: Classifiche
+    aliases: [classifica, baltop, leaderboard]
+  casse:
+    description: Casse e chiavi
+    aliases: [crates, crate, chiavi, keys]
+  negozio:
+    description: Negozio gemme
+    aliases: [shop, store, buy]
+  skin:
+    description: Skin di piccone e corazza
+    aliases: [skins, cosmetici]
+  giornaliero:
+    description: Ricompensa giornaliera
+    aliases: [daily]
+  booster:
+    description: Info sui booster
+    aliases: [boosters]
+  fly:
+    description: Attiva il volo
+    aliases: [vola]
+  gang:
+    description: Gang
+    aliases: [g, gangs]
+  pepita:
+    description: Aiuto
+    aliases: [aiuto, comandi]
+  pepitaadmin:
+    description: Comandi staff
+    aliases: [pa, padmin]
+    permission: pepita.admin
+
+permissions:
+  pepita.admin:
+    description: Comandi staff di Pepita, costruzione e accesso a tutte le miniere
+    default: op
+  pepita.fly:
+    description: Volo nell'hub, nella prigione e nelle miniere
+    default: op

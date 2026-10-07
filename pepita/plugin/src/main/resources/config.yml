@@ -1,0 +1,182 @@
+# ==========================================================
+#   PEPITA — configurazione del plugin PepitaCore (v2)
+#   Tutti i premi in soldi sono espressi in "minuti di scavo":
+#   vedi ECONOMIA.md per formule e tabelle.
+# ==========================================================
+
+server:
+  # Indirizzo mostrato in scoreboard e tab
+  ip-visualizzato: "pepitamc.it"
+  # MOTD nella lista server (formato MiniMessage)
+  motd-1: "<gradient:#FFE259:#FFA751><b>⛏ PEPITA</b></gradient> <dark_gray>»</dark_gray> <white>Prison italiano</white>"
+  motd-2: "<gray>Quantum • Celle • Battle Pass • <gold>Corsa all'Oro"
+
+mondo:
+  # Ora del giorno fissa nell'hub, nella prigione e nelle miniere (6000 = mezzogiorno)
+  ora: 6000
+  # Al login si viene portati nell'hub
+  spawn-ad-ogni-accesso: true
+  # Blocchi piazzati per tick durante le costruzioni (abbassa se il server è lento: 8000 su Falix free)
+  blocchi-per-tick: 12000
+
+# I cinque mondi vuoti (pepita_hub, pepita, pepita_miniere, pepita_pvp, pepita_celle) vengono costruiti
+# al primo avvio. Il plugin mette qui "true" quando un mondo è pronto: rimetti false (o usa
+# /pa ricostruisci <mondo>) per ricostruirlo.
+mondi:
+  costruiti:
+    pepita_hub: false
+    pepita: false
+    pepita_miniere: false
+    pepita_pvp: false
+    pepita_celle: false
+
+resource-pack:
+  # Link DIRETTO allo zip del resource pack (vedi LEGGIMI). Lascia vuoto per non inviarlo.
+  url: "https://download.mc-packs.net/pack/1c7315cd6b37d5a50798c5b0f4fd53bc4b190544.zip"
+  # SHA-1 dello zip (40 caratteri). Lascia "" e lo calcola il plugin scaricando lo zip.
+  sha1: ""
+  obbligatorio: false
+  messaggio: "<gold>Pepita</gold> <gray>usa un resource pack per skin, menu decorati, logo e corazze!"
+
+economia:
+  # Blocchi al minuto di riferimento per l'unità "minuto di scavo"
+  blocchi-minuto-riferimento: 90
+  # Soft cap del moltiplicatore soldi: eff = 1 + cap * (1 - e^(-(m-1)/cap)). 0 = disattivato
+  soft-cap: 25
+  # Tassa su /paga e /pepite paga (0.05 = 5%, la riceve "il sistema": esce dall'economia)
+  tassa-paga: 0.05
+
+rank:
+  # Costo del rank A->B; ogni rank costa "crescita" volte il precedente
+  costo-base: 4000
+  crescita: 1.5
+
+prestigio:
+  # Costo del prestigio = costo del rank Z x questo valore
+  costo-moltiplicatore: 2.5
+  # Ogni prestigio aumenta i costi dei rank di questa percentuale (0.5 = +50%)
+  aumento-costo: 0.5
+  # Bonus soldi permanente per ogni prestigio (0.10 = +10%)
+  bonus-soldi: 0.10
+  massimo: 1000
+
+evasione:
+  prestigio-richiesto: 10
+  # Ogni evasione moltiplica i costi dei rank
+  aumento-costo: 3.0
+  bonus-soldi: 0.25
+  bonus-pepite: 0.50
+
+miniere:
+  # Reset automatico ogni N secondi o quando restano meno di questa percentuale di blocchi.
+  # Le miniere senza giocatori vicini aspettano il prossimo ingresso (risparmio di risorse).
+  reset-secondi: 300
+  reset-percentuale: 0.30
+  # Blocchi rimessi per tick durante i reset (le miniere sono 29x29x30 = 25.230 blocchi)
+  blocchi-reset-per-tick: 15000
+
+tier:
+  # Costo per passare al tier successivo: Legno→Pietra, Pietra→Ferro, Ferro→Oro, Oro→Diamante,
+  # Diamante→Netherite, Netherite→Pepita, Pepita→Quantum. Soldi in minuti di scavo + Pepite.
+  costi-minuti: [8, 20, 45, 90, 180, 360, 720]
+  costi-pepite: [300, 2000, 10000, 40000, 150000, 600000, 2500000]
+
+quantum:
+  # Quantum base per blocco della miniera PvP
+  minerale: 1.0
+  nucleo: 4.0
+  # Rendimenti decrescenti: resa = D / (D + quantum raccolti nell'ultima ora). A D quantum/ora si dimezza.
+  dimezzamento-ora: 400
+  # Secondi per rompere il Minerale Quantico (il Nucleo ne richiede ~2,3 volte tanto)
+  secondi-minerale: 2.5
+  # Frazione dei Quantum in tasca che va a chi ti uccide
+  bottino-uccisione: 0.5
+
+armatura:
+  livello-max: 25
+  # Costo in Quantum del livello L = costo-base * crescita^L
+  costo-base: 40
+  costo-crescita: 1.18
+  # Bonus per livello (moltiplicato per il peso del pezzo: elmo=esperienza, corpetto=soldi, gambali=pepite, stivali=quantum)
+  bonus-livello:
+    soldi: 0.006
+    esperienza: 0.012
+    pepite: 0.006
+    quantum: 0.008
+
+celle:
+  # Prezzo = minuti di scavo: base + piano * costo-minuti-piano (piano 0 = il più basso)
+  costo-minuti-base: 45
+  costo-minuti-piano: 15
+  max-per-giocatore: 4
+  # Massimo di celle unite abbattendo i muri
+  max-unite: 4
+  # Tassa giornaliera per cella (minuti di scavo), pagata quando il proprietario è online
+  tassa-minuti-giorno: 3
+  # Dopo tanti giorni senza pagare (o senza entrare) la cella viene liberata
+  giorni-abbandono: 14
+  # Secondi prima che le porte di ferro si richiudano
+  porta-secondi: 6
+  # Prezzo base di un blocco dell'arredamento (minuti di scavo per 8 blocchi)
+  arredo-minuti: 0.5
+
+lucky:
+  # Un Lucky Block ogni N blocchi durante il reset delle miniere (0 = disattivati)
+  ogni-blocchi: 4000
+  probabilita:
+    trappola: 0.08
+    leggendario: 0.05
+    raro: 0.25
+
+battlepass:
+  stagione: 1
+  nome: "Stagione 1 — La Grande Evasione"
+  livelli: 50
+  xp-livello: 1000
+  # XP del pass per ogni blocco rotto (0.05 = 1 XP ogni 20 blocchi)
+  xp-per-blocco: 0.05
+  prezzo-premium: 1200
+
+keyall:
+  minuti-min: 35
+  minuti-max: 45
+
+tutorial:
+  # Il tutorial parte da solo al primo accesso
+  automatico: true
+  premio-minuti: 20
+  premio-pepite: 1500
+
+corsa-all-oro:
+  ogni-minuti-min: 45
+  ogni-minuti-max: 75
+  durata-secondi: 300
+  # Durata quando viene riscattata una Pepita d'Oro
+  durata-pepita-secondi: 180
+  # Soldi del riscatto della Pepita d'Oro (minuti di scavo)
+  pepita-minuti: 45
+
+giornaliero:
+  ore: 24
+  minuti-soldi: 20
+
+# Gemme che si possono guadagnare giocando (oltre a quelle acquistate)
+gemme-guadagnabili:
+  giornaliero: 5
+  prestigio: 3
+  evasione: 25
+
+negozio:
+  # Dove si comprano le gemme (es. il tuo Tebex)
+  link: "negozio.pepitamc.it"
+  starter-pack: 900
+
+gang:
+  costo-creazione: 25000
+  max-membri: 8
+
+# Prezzi personalizzati dei blocchi (opzionale). Esempio:
+# prezzi-blocchi:
+#   STONE: 1.0
+#   DIAMOND_BLOCK: 5000
+prezzi-blocchi: {}

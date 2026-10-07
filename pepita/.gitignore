@@ -1,0 +1,4 @@
+plugin/target/
+tools/bin/
+tools/out/
+resourcepack/__pycache__/

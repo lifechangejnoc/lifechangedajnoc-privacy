@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "pepita:aureo"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "pepita:aureo"
+      }
+    ]
+  }
+}
