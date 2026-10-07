@@ -119,7 +119,7 @@ public final class WorldService {
         rule(w, GameRules.RESPAWN_RADIUS, 0);
         rule(w, GameRules.LOCATOR_BAR, false);
         rule(w, GameRules.SPREAD_VINES, false);
-        rule(w, GameRules.BLOCK_DROPS, false);
+        rule(w, GameRules.BLOCK_DROPS, name.equals(W_CELLS)); // nelle celle i blocchi rotti tornano come oggetti
         rule(w, GameRules.PVP, name.equals(W_PVP));
         rule(w, GameRules.NATURAL_HEALTH_REGENERATION, true);
         long time = switch (name) {

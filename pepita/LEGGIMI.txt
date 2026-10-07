@@ -1,0 +1,185 @@
+==========================================================
+  PEPITA — PepitaCore v2 per Paper 26.2
+==========================================================
+
+Cosa contiene il plugin
+-----------------------
+- 5 mondi vuoti separati, costruiti dal plugin al primo avvio:
+    pepita_hub      hub con portali, bussola dei viaggi, logo, cartellone e Beppe il Secondino (tutorial)
+    pepita          cortile della prigione
+    pepita_miniere  le miniere A–Z (29x29, profonde 30) su isole a 8 temi
+    pepita_pvp      la Miniera PvP dei Quantum (zona sicura al centro, PvP intorno)
+    pepita_celle    il colosseo delle celle (10 piani x 32 settori, porte di ferro, ascensori)
+- Rank A–Z, prestigio, evasione, incantesimi, tier del piccone (8) e skin come oggetti,
+  Quantum, corazza potenziabile (0–25), celle, lucky block, battle pass (50 livelli),
+  traguardi, keyall casuale, Corsa all'Oro, casse, gang, negozio gemme, TAB e scoreboard.
+- L'economia è spiegata in ECONOMIA.md (formule, tabelle, come leggere i log).
+
+
+INSTALLAZIONE SU FALIX
+======================
+1. Pannello Falix → Gestione File → cartella plugins/
+   Carica: PepitaCore.jar, ViaVersion-5.12.0.jar, ViaBackwards-5.12.0.jar
+   (Se c'era già un vecchio PepitaCore.jar, sostituiscilo. NON cancellare la cartella
+   plugins/PepitaCore: dentro ci sono i dati dei giocatori.)
+
+2. Vai su https://mc-packs.net, carica PepitaResourcePack.zip e copia il link DIRETTO
+   (quello che finisce con .zip).
+
+3. Avvia il server una volta, poi fermalo. Apri plugins/PepitaCore/config.yml e imposta:
+       resource-pack:
+         url: "<il link copiato>"
+         sha1: ""          (lascia vuoto: lo calcola il plugin)
+   Salva e riavvia.
+
+4. In console scrivi:  op <il tuo nome>
+
+5. Versione di Java: Paper 26.2 richiede Java 25 (sul pannello Falix: Startup → Java 25).
+   Il jar consegnato gira su Java 25 senza problemi.
+
+Primo avvio: la costruzione dei mondi
+-------------------------------------
+- Al primo avvio il plugin costruisce i 5 mondi uno dopo l'altro (circa 750.000 blocchi in tutto).
+  In console vedi:
+      Mondi da costruire: pepita_hub, pepita, pepita_miniere, pepita_pvp, pepita_celle
+      Costruzione ... : N blocchi...
+      Costruzione ... completata in X s
+  Ci vuole qualche minuto. NON spegnere il server finché non compare l'ultimo "completata".
+- Quando un mondo è pronto, il plugin scrive "true" in config.yml → mondi.costruiti.<mondo>.
+  Ai riavvii successivi non ricostruisce più nulla.
+- Se il server laggia durante la costruzione abbassa mondo.blocchi-per-tick (8000 va bene
+  sul piano free di Falix).
+- Per rifare un mondo: /pa ricostruisci <hub|prigione|miniere|pvp|celle|tutti>
+  (oppure rimetti false in mondi.costruiti e riavvia).
+
+Aggiornamento dalla v1
+----------------------
+- I dati dei giocatori (plugins/PepitaCore/giocatori/*.yml) restano validi: vengono solo
+  aggiunti campi nuovi.
+- Il vecchio miniere.yml viene copiato in miniere_v1.yml e convertito: nomi, blocchi e requisiti
+  restano, le coordinate passano al nuovo mondo pepita_miniere.
+- La vecchia prigione nel mondo "pepita" viene ripulita e ricostruita nel nuovo stile.
+- Le skin del piccone possedute diventano oggetti nell'inventario al primo accesso.
+- I giocatori della v1 partono con il piccone al tier Diamante (i nuovi da Legno).
+
+Impostazioni utili del server
+-----------------------------
+- Il PvP è gestito dal plugin mondo per mondo (attivo solo nella Miniera PvP fuori dalla
+  zona sicura). Se in server.properties hai ancora la voce pvp, lasciala a true.
+- Il mondo principale del server (world) non serve: chi entra viene portato nell'hub
+  (mondo.spawn-ad-ogni-accesso: true).
+- Dopo aver cambiato config.yml basta /pa reload (per miniere.yml serve un riavvio).
+
+
+COMANDI DEI GIOCATORI
+=====================
+Generali
+  /menu  (/m)                      tutto in un menu
+  /pepita  (/aiuto, /comandi)      lista dei comandi
+  /selettore  (/viaggi)            menu dei viaggi (lo apre anche la bussola)
+  /spawn  (/hub, /lobby)           torna all'hub
+  /prigione  (/cortile)            vai nel cortile della prigione
+  /pvp                             vai nella Miniera PvP dei Quantum
+  /tutorial                        il tutorial di Beppe  (/tutorial salta, /tutorial ricomincia)
+  /piccone  (/kit)                 riprendi piccone, bussola e corazza
+
+Miniere e progressione
+  /miniere  [miniera]              menu delle miniere (o vai direttamente a una)
+  /miniera  [miniera]              vai alla tua miniera migliore
+  /rankup  (/ru)                   sali di un rank
+  /rankupmax  (/rum)               sali di tutti i rank che puoi pagare
+  /prestigio                       ricomincia da A con bonus permanenti
+  /evasione                        il rebirth (dal prestigio 10)
+
+Piccone e corazza
+  /incantesimi  (/e)               potenzia il piccone (pepite e Quantum)
+  /tier  (/potenzia)               porta il piccone al tier successivo
+  /skin                            applica o togli le skin di piccone e corazza
+  /corazza  (/armatura)            potenzia la corazza con i Quantum
+  /quantum  (/q)                   i tuoi Quantum (e quelli ancora in tasca)
+
+Soldi e premi
+  /soldi  [giocatore]  (/bal)      soldi, pepite e gemme
+  /pepite                          le tue pepite
+  /pepite paga <giocatore> <n>     regala pepite (tassa 5%)
+  /paga <giocatore> <n>            dai soldi (tassa 5%)
+  /gemme                           le tue gemme
+  /negozio  (/shop)                negozio gemme (VIP, chiavi, booster, skin)
+  /casse                           casse e chiavi
+  /giornaliero  (/daily)           premio ogni 24 ore
+  /battlepass  (/bp, /missioni)    battle pass e missioni giornaliere/settimanali
+  /traguardi                       premi per i blocchi rotti
+  /keyall                          quanto manca al prossimo keyall
+  /booster                         booster attivi
+  /top  [soldi|blocchi|prestigio]  classifiche
+  /fly                             vola (VIP+ o incantesimo) nell'hub, nella prigione e nelle miniere
+
+Celle (colosseo)
+  /cella                           vai nella tua cella (o apri il menu per comprarne una)
+  /cella menu                      menu delle celle
+  /cella fidati [giocatore]        aggiungi/togli un fidato (senza nome: lista dei fidati)
+  /cella unisci <sinistra|destra>  abbatti il muro e unisci la cella vicina (se è tua)
+  /cella dividi <sinistra|destra>  separa di nuovo le celle
+  /cella visita <giocatore>        vai davanti alla cella di un giocatore
+  /cella reset                     svuota la cella in cui sei
+  /cella lascia                    libera la cella in cui sei
+  /cella info                      di chi è la cella in cui sei
+
+Gang
+  /gang crea <nome>   /gang invita <giocatore>   /gang accetta   /gang esci
+  /gang caccia <giocatore>   /gang chat <messaggio>  (/g c)   /gang top
+
+
+COMANDI DELLO STAFF  (/pepitaadmin, /pa — permesso pepita.admin, di default agli op)
+==========================================================================
+Economia e giocatori
+  /pa dai <giocatore> <soldi|pepite|gemme|quantum> <n>
+  /pa togli <giocatore> <soldi|pepite|gemme|quantum> <n>
+  /pa chiave <giocatore> <comune|rara|leggendaria|pepita> <n>
+  /pa vip <giocatore> <0-4>
+  /pa rank <giocatore> <A-Z>
+  /pa prestigio <giocatore> <n>
+  /pa incantesimo <giocatore> <id> <livello>
+  /pa skin <giocatore> <id>
+  /pa oggetto <giocatore> <pepita|bomba|grande|nucleare> [n]
+  /pa tier <giocatore> <0-7>
+  /pa corazza <giocatore> <0-3> <livello>       (0 elmo, 1 corpetto, 2 gambali, 3 stivali)
+  /pa battlepass <giocatore> <xp|premium>
+  /pa tutorial <giocatore>                       fa ripartire il tutorial
+  /pa info <giocatore>                           riepilogo di un giocatore
+  /pa economia                                   entrate/uscite dell'ultima ora e delle ultime 24 ore
+
+Eventi
+  /pa booster <moltiplicatore> <minuti>          booster globale
+  /pa corsa [secondi]                            avvia la Corsa all'Oro
+  /pa keyall                                     keyall immediato
+
+Mondi e manutenzione
+  /pa reset <miniera|tutte>                      resetta le miniere
+  /pa ricostruisci <hub|prigione|miniere|pvp|celle|tutti>
+  /pa cella libera <piano 1-10> <settore 1-32>   libera una cella
+  /pa cella reset <piano 1-10> <settore 1-32>    svuota una cella
+  /pa ologrammi  (/pa npc)                       ricrea ologrammi, logo, cartellone e NPC
+  /pa render [spawn|miniera]                     salva un'immagine della zona in plugins/PepitaCore
+  /pa salva                                      salva subito tutti i dati
+  /pa reload                                     ricarica config.yml
+
+Permessi
+  pepita.admin   comandi staff, accesso a tutte le miniere (default: op)
+  pepita.fly     volo nell'hub, nella prigione e nelle miniere (default: op)
+
+
+FILE DEL PLUGIN  (plugins/PepitaCore/)
+=====================================
+  config.yml        tutte le impostazioni, commentate in italiano
+  miniere.yml       le miniere (blocchi, requisiti, coordinate)
+  celle.yml         proprietari, fidati e celle unite
+  giocatori/        un file per giocatore
+  economia.log      una riga per ogni ora con entrate e uscite per fonte
+
+
+RICOMPILARE IL PLUGIN (solo per sviluppatori)
+=============================================
+  cd plugin
+  mvn package            → target/PepitaCore.jar  (Java 25, paper-api 26.2.build.132-stable)
+  Anteprime e controllo delle costruzioni: tools/anteprima.sh (vedi i commenti nello script).
