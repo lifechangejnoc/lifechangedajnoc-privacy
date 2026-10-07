@@ -51,48 +51,123 @@ public final class LobbyMap {
         return !cfg().getString("lobby.mappa-installata", "").isEmpty();
     }
 
-    private File zip() {
-        String name = cfg().getString("lobby.mappa", "");
-        return name.isBlank() ? null : new File(new File(plugin.getDataFolder(), "mappe"), name);
-    }
-
-    private static String marker(File f) {
-        return f.getName() + ":" + f.length() + ":" + f.lastModified();
+    private File mapsDir() {
+        return new File(plugin.getDataFolder(), "mappe");
     }
 
     /**
-     * Da chiamare prima di creare il mondo della lobby. Se c'è uno zip nuovo, lo installa.
+     * La mappa da installare: lo zip (o la cartella già estratta) indicato in lobby.mappa; se non c'è, l'unico zip
+     * o l'unica cartella con un level.dat presenti in plugins/PepitaCore/mappe/. null = nessuna mappa.
+     */
+    private File source() {
+        String name = cfg().getString("lobby.mappa", "");
+        if (name.isBlank()) return null;
+        File dir = mapsDir();
+        File f = new File(dir, name);
+        if (f.exists()) return f;
+        File noExt = new File(dir, name.replaceAll("(?i)\\.zip$", ""));
+        if (noExt.isDirectory() && levelDir(noExt.toPath()) != null) return noExt;
+        File[] all = dir.listFiles();
+        List<File> found = new ArrayList<>();
+        if (all != null) for (File c : all)
+            if (c.isFile() && c.getName().toLowerCase(java.util.Locale.ROOT).endsWith(".zip") || c.isDirectory() && levelDir(c.toPath()) != null) found.add(c);
+        if (found.size() == 1) {
+            plugin.getLogger().info("Lobby: \"" + name + "\" non c'è in mappe/, uso \"" + found.getFirst().getName() + "\".");
+            return found.getFirst();
+        }
+        if (found.isEmpty()) {
+            if (!active()) plugin.getLogger().info("Lobby: nessuna mappa in " + dir.getPath() + " (uso la lobby del plugin).");
+        } else {
+            plugin.getLogger().warning("Lobby: in mappe/ ci sono più mappe " + found.stream().map(File::getName).toList()
+                    + ": scrivi in config.yml lobby.mappa il nome di quella da usare.");
+        }
+        return null;
+    }
+
+    private static String marker(File f) throws IOException {
+        if (f.isFile()) return f.getName() + ":" + f.length() + ":" + f.lastModified();
+        Path ld = levelDir(f.toPath());
+        return f.getName() + ":" + Files.size(ld.resolve("level.dat")) + ":" + Files.getLastModifiedTime(ld.resolve("level.dat")).toMillis();
+    }
+
+    /** Cartella con level.dat dentro una cartella (lei stessa o fino a due livelli sotto). */
+    private static Path levelDir(Path dir) {
+        if (Files.isRegularFile(dir.resolve("level.dat"))) return dir;
+        try (var s = Files.walk(dir, 3)) {
+            return s.filter(p -> p.getFileName().toString().equals("level.dat") && Files.isRegularFile(p)).map(Path::getParent)
+                    .min(java.util.Comparator.comparingInt(Path::getNameCount)).orElse(null);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Da chiamare prima di creare il mondo della lobby. Se c'è una mappa nuova, la installa.
      * @param createHub crea (o carica) il mondo pepita_hub come al solito
      */
     public void prepare(Supplier<World> createHub) {
-        new File(plugin.getDataFolder(), "mappe").mkdirs();
-        File z = zip();
-        if (z == null || !z.isFile()) return;
-        String mk = marker(z);
-        if (mk.equals(cfg().getString("lobby.mappa-installata", ""))) return;
-        plugin.getLogger().info("Nuova mappa per la lobby: " + z.getName() + ". Installazione...");
-        try (ZipFile zf = new ZipFile(z)) {
-            String root = findRoot(zf);
-            if (root == null) {
-                plugin.getLogger().severe("Nello zip " + z.getName() + " non c'è un level.dat: non è un mondo Minecraft. Lobby invariata.");
+        mapsDir().mkdirs();
+        File src = source();
+        if (src == null) return;
+        String mk;
+        try {
+            mk = marker(src);
+        } catch (IOException ex) {
+            plugin.getLogger().severe("Lobby: non riesco a leggere " + src.getName() + ": " + ex.getMessage());
+            return;
+        }
+        if (mk.equals(cfg().getString("lobby.mappa-installata", ""))) {
+            plugin.getLogger().info("Lobby: mappa " + src.getName() + " già installata.");
+            return;
+        }
+        plugin.getLogger().info("Nuova mappa per la lobby: " + src.getName() + ". Installazione...");
+        String stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        Path container = Bukkit.getWorldContainer().toPath();
+        Path legacy = container.resolve(Layout.W_HUB);
+        Path tmp = container.resolve(Layout.W_HUB + "_nuova_" + stamp);
+        Path backup = container.resolve(Layout.W_HUB + "_backup_" + stamp);
+        Path oldPath = null;
+        boolean moved = false;
+        try {
+            // 1) prima si prepara la mappa in una cartella a parte: il mondo attuale non si tocca finché non è pronta
+            YamlConfiguration info;
+            int files;
+            if (src.isFile()) {
+                try (ZipFile zf = new ZipFile(src)) {
+                    String root = findRoot(zf);
+                    if (root == null) {
+                        plugin.getLogger().severe("Lobby: nello zip " + src.getName() + " non c'è un level.dat, non è un mondo Minecraft. Lobby invariata.");
+                        return;
+                    }
+                    files = extract(zf, root, tmp);
+                    info = readInfo(zf);
+                }
+            } else {
+                Path ld = levelDir(src.toPath());
+                files = copyWorld(ld, tmp);
+                Path yml = ld.resolve(INFO);
+                info = Files.isRegularFile(yml) ? YamlConfiguration.loadConfiguration(yml.toFile()) : null;
+            }
+            if (!Files.isRegularFile(tmp.resolve("level.dat")) || !Files.isDirectory(tmp.resolve("region"))) {
+                plugin.getLogger().severe("Lobby: la mappa " + src.getName() + " non ha level.dat e region/. Lobby invariata.");
+                deleteTree(tmp);
                 return;
             }
-            String stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            Path container = Bukkit.getWorldContainer().toPath();
-            // 1) il mondo della lobby attuale (anche appena creato e vuoto) va in backup: Paper non importa sopra file esistenti
+            // 2) il mondo della lobby attuale (anche appena creato e vuoto) va in backup: Paper non importa sopra file esistenti
             World old = createHub.get();
-            Path oldPath = old.getWorldPath();
+            oldPath = old.getWorldPath();
             if (!Bukkit.unloadWorld(old, true)) {
-                plugin.getLogger().severe("Impossibile scaricare il mondo della lobby: mappa non installata.");
+                plugin.getLogger().severe("Lobby: impossibile scaricare il mondo pepita_hub, mappa non installata.");
+                deleteTree(tmp);
                 return;
             }
-            if (Files.exists(oldPath)) Files.move(oldPath, container.resolve(Layout.W_HUB + "_backup_" + stamp));
-            Path legacy = container.resolve(Layout.W_HUB);
+            if (Files.exists(oldPath)) {
+                Files.move(oldPath, backup);
+                moved = true;
+            }
             if (Files.exists(legacy)) Files.move(legacy, container.resolve(Layout.W_HUB + "_backup_cartella_" + stamp));
-            // 2) estrae la mappa come cartella "pepita_hub" (formato classico): Paper la importa alla creazione del mondo
-            int files = extract(zf, root, legacy);
-            // 3) punti della lobby e blocchi da sistemare
-            YamlConfiguration info = readInfo(zf);
+            // 3) la mappa diventa la cartella "pepita_hub" (formato classico): Paper la importa quando crea il mondo
+            Files.move(tmp, legacy);
             if (info != null) {
                 if (info.isList("spawn")) cfg().set("lobby.spawn", info.getDoubleList("spawn"));
                 if (info.isList("npc")) cfg().set("lobby.npc", info.getDoubleList("npc"));
@@ -102,10 +177,44 @@ public final class LobbyMap {
             cfg().set("lobby.mappa-installata", mk);
             cfg().set("mondi.costruiti." + Layout.W_HUB, true);
             plugin.saveConfig();
-            plugin.getLogger().info("Mappa della lobby estratta (" + files + " file). Il vecchio mondo è in " + Layout.W_HUB + "_backup_" + stamp
-                    + ". Paper ora la importa: può volerci qualche secondo.");
-        } catch (IOException ex) {
-            plugin.getLogger().severe("Installazione della mappa della lobby non riuscita: " + ex.getMessage());
+            plugin.getLogger().info("Lobby: mappa pronta (" + files + " file)" + (moved ? ", il vecchio mondo è in " + backup.getFileName() : "")
+                    + ". Ora Paper la importa (\"legacy CraftBukkit import\"): può volerci qualche secondo.");
+        } catch (Exception ex) {
+            plugin.getLogger().severe("Lobby: installazione della mappa non riuscita (" + ex + "). Rimetto la lobby di prima.");
+            try {
+                deleteTree(tmp);
+                if (moved && oldPath != null && !Files.exists(oldPath)) Files.move(backup, oldPath);
+            } catch (IOException ex2) {
+                plugin.getLogger().severe("Lobby: ripristino non riuscito, il vecchio mondo è in " + backup + ": " + ex2.getMessage());
+            }
+        }
+    }
+
+    private static int copyWorld(Path from, Path to) throws IOException {
+        int[] n = {0};
+        Files.createDirectories(to);
+        for (String k : KEEP) {
+            Path s = from.resolve(k.endsWith("/") ? k.substring(0, k.length() - 1) : k);
+            if (!Files.exists(s)) continue;
+            try (var w = Files.walk(s)) {
+                for (Path p : w.toList()) {
+                    Path out = to.resolve(from.relativize(p).toString());
+                    if (Files.isDirectory(p)) Files.createDirectories(out);
+                    else {
+                        Files.createDirectories(out.getParent());
+                        Files.copy(p, out, StandardCopyOption.REPLACE_EXISTING);
+                        n[0]++;
+                    }
+                }
+            }
+        }
+        return n[0];
+    }
+
+    private static void deleteTree(Path p) throws IOException {
+        if (!Files.exists(p)) return;
+        try (var w = Files.walk(p)) {
+            for (Path q : w.sorted(java.util.Comparator.reverseOrder()).toList()) Files.deleteIfExists(q);
         }
     }
 
