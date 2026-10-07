@@ -53,6 +53,7 @@ public final class PlanTool {
         String tag = name.replace(':', '_');
         System.out.println(tag + ": " + p.size() + " blocchi, calcolato in " + (t1 - t0) + " ms");
         validate(p);
+        contract(name, p);
         stats(p);
         Grid g = new Grid(p);
         if (opt.containsKey("zoom")) {
@@ -161,6 +162,136 @@ public final class PlanTool {
             System.out.println("validazione: " + bad.size() + " stringhe NON valide:");
             bad.entrySet().stream().limit(40).forEach(e -> System.out.println("  x" + e.getValue() + "  " + e.getKey() + "   <- " + why.get(e.getKey())));
         }
+    }
+
+    // =====================================================================
+    //  Contratti con il plugin (Layout, CellGeometry, blocchi del resource pack)
+    // =====================================================================
+
+    static int errors;
+
+    static void err(String m) {
+        errors++;
+        if (errors <= 30) System.out.println("  CONTRATTO: " + m);
+    }
+
+    static String at(BuildPlan p, int x, int y, int z) {
+        String d = p.get(x, y, z);
+        return d == null ? "minecraft:air" : d;
+    }
+
+    static boolean isAir(BuildPlan p, int x, int y, int z) {
+        return id(at(p, x, y, z)).equals("air");
+    }
+
+    static void airBox(BuildPlan p, String what, int x1, int y1, int z1, int x2, int y2, int z2) {
+        for (int x = x1; x <= x2; x++) for (int y = y1; y <= y2; y++) for (int z = z1; z <= z2; z++)
+            if (!isAir(p, x, y, z)) { err(what + ": blocco " + at(p, x, y, z) + " in " + x + "," + y + "," + z); return; }
+    }
+
+    static void expect(BuildPlan p, String what, int x, int y, int z, String prefix) {
+        String d = at(p, x, y, z);
+        if (!d.startsWith(prefix)) err(what + ": atteso " + prefix + " in " + x + "," + y + "," + z + " ma c'è " + d);
+    }
+
+    static void contract(String name, BuildPlan p) {
+        errors = 0;
+        p.forEach((k, d) -> {
+            String i = id(d);
+            if (i.equals("sponge") || i.equals("budding_amethyst") || i.equals("lodestone"))
+                err("blocco riservato al gameplay (texture del pack) usato come decorazione: " + i + " in "
+                        + BuildPlan.kx(k) + "," + BuildPlan.ky(k) + "," + BuildPlan.kz(k));
+        });
+        String b = name.split(":")[0];
+        switch (b) {
+            case "hub" -> {
+                for (Object[] box : it.pepita.core.world.Layout.HUB_PORTALS) {
+                    int x1 = (Integer) box[1], y1 = (Integer) box[2], z1 = (Integer) box[3], x2 = (Integer) box[4], y2 = (Integer) box[5], z2 = (Integer) box[6];
+                    String axis = x1 == x2 ? "z" : "x";
+                    for (int x = x1; x <= x2; x++) for (int y = y1; y <= y2; y++) for (int z = z1; z <= z2; z++)
+                        expect(p, "portale " + box[0], x, y, z, "minecraft:nether_portal[axis=" + axis + "]");
+                }
+                double[] s = it.pepita.core.world.Layout.HUB_SPAWN;
+                airBox(p, "spawn hub", (int) Math.floor(s[0]), 100, (int) Math.floor(s[2]), (int) Math.floor(s[0]), 102, (int) Math.floor(s[2]));
+                double[] n = it.pepita.core.world.Layout.HUB_NPC;
+                airBox(p, "NPC", (int) Math.floor(n[0]) - 3, 100, (int) Math.floor(n[2]) - 3, (int) Math.floor(n[0]) + 3, 103, (int) Math.floor(n[2]) + 3);
+                double[] l = it.pepita.core.world.Layout.HUB_LOGO;
+                int lx = (int) Math.floor(l[0]), ly = (int) Math.floor(l[1]), lz = (int) Math.floor(l[2]);
+                airBox(p, "logo hub", lx - 10, ly - 10, lz - 3, lx + 10, ly + 10, lz + 3);
+            }
+            case "spawn", "prigione" -> {
+                String[] cr = {"minecraft:chest[facing=west", "minecraft:ender_chest[facing=west", "minecraft:purple_shulker_box[facing=up", "minecraft:yellow_shulker_box[facing=up"};
+                for (int i = 0; i < 4; i++) { int[] c = it.pepita.core.world.Layout.PRISON_CRATES[i]; expect(p, "cassa " + i, c[0], c[1], c[2], cr[i]); }
+                for (int[] c : it.pepita.core.world.Layout.PRISON_BOARDS) {
+                    if (isAir(p, c[0], c[1], c[2])) err("classifica senza blocco in " + c[0] + "," + c[1] + "," + c[2]);
+                    airBox(p, "sopra la classifica", c[0], c[1] + 1, c[2], c[0], c[1] + 3, c[2]);
+                }
+                int[] e = it.pepita.core.world.Layout.PRISON_ENCHANT; expect(p, "incantesimi", e[0], e[1], e[2], "minecraft:enchanting_table");
+                e = it.pepita.core.world.Layout.PRISON_SHOP; expect(p, "negozio", e[0], e[1], e[2], "minecraft:emerald_block");
+                e = it.pepita.core.world.Layout.PRISON_DAILY; expect(p, "giornaliero", e[0], e[1], e[2], "minecraft:barrel[facing=up");
+                e = it.pepita.core.world.Layout.PRISON_ARMOR; expect(p, "corazza", e[0], e[1], e[2], "minecraft:smithing_table");
+                e = it.pepita.core.world.Layout.PRISON_PASS; expect(p, "battle pass", e[0], e[1], e[2], "minecraft:lectern[facing=south");
+                for (int x = -2; x <= 2; x++) for (int y = 100; y <= 104; y++)
+                    expect(p, "portale miniere", x, y, it.pepita.core.world.Layout.PRISON_PORTAL_Z, "minecraft:nether_portal[axis=x]");
+                double[] s = it.pepita.core.world.Layout.PRISON_SPAWN;
+                airBox(p, "spawn prigione", (int) Math.floor(s[0]), 100, (int) Math.floor(s[2]), (int) Math.floor(s[0]), 102, (int) Math.floor(s[2]));
+                double[] l = it.pepita.core.world.Layout.PRISON_LOGO;
+                int lx = (int) Math.floor(l[0]), ly = (int) Math.floor(l[1]), lz = (int) Math.floor(l[2]);
+                airBox(p, "logo prigione", lx - 9, ly - 7, lz - 3, lx + 9, ly + 7, lz + 3);
+                radius(p, it.pepita.core.world.Layout.PRISON_RADIUS + 8, 0, 0);
+            }
+            case "mine", "miniera", "pvp" -> {
+                it.pepita.core.mine.Mine m = b.equals("pvp") ? Builds.samplePvp() : Builds.sampleMine(name.contains(":") ? name.split(":")[1] : "pietra");
+                for (int x = m.minX; x <= m.maxX; x++) for (int y = m.minY; y <= m.maxY; y++) for (int z = m.minZ; z <= m.maxZ; z++)
+                    if (p.has(x, y, z)) { err("interno della buca toccato in " + x + "," + y + "," + z); x = m.maxX + 1; break; }
+                for (int x = m.minX - 1; x <= m.maxX + 1; x++) for (int z = m.minZ - 1; z <= m.maxZ + 1; z++) {
+                    boolean side = x == m.minX - 1 || x == m.maxX + 1 || z == m.minZ - 1 || z == m.maxZ + 1;
+                    if (isAir(p, x, m.minY - 1, z)) err("fondo bucato in " + x + "," + z);
+                    if (side) for (int y = m.minY; y <= m.maxY; y++) if (isAir(p, x, y, z)) { err("parete bucata in " + x + "," + y + "," + z); break; }
+                }
+                airBox(p, "sopra la buca", m.minX, m.maxY + 1, m.minZ, m.maxX, m.maxY + 14, m.maxZ);
+                int lx = (int) Math.floor(m.labelX), ly = (int) Math.floor(m.labelY), lz = (int) Math.floor(m.labelZ);
+                airBox(p, "insegna", lx - 2, ly - 2, lz - 2, lx + 2, ly + 2, lz + 2);
+                int sx = (int) Math.floor(m.spawnX), sy = (int) Math.floor(m.spawnY), sz = (int) Math.floor(m.spawnZ);
+                if (isAir(p, sx, sy - 1, sz)) err("pedana d'arrivo mancante");
+                airBox(p, "arrivo", sx, sy, sz, sx, sy + 2, sz);
+                radius(p, b.equals("pvp") ? it.pepita.core.world.Layout.PVP_RADIUS : it.pepita.core.world.Layout.MINE_ISLAND_RADIUS, m.centerX(), m.centerZ());
+            }
+            case "colosseo", "celle" -> {
+                int bad = 0;
+                int R = (int) Math.ceil(it.pepita.core.world.Layout.CELL_ROUT) + 1;
+                for (int x = -R; x <= R; x++) for (int z = -R; z <= R; z++)
+                    for (int y = it.pepita.core.world.Layout.CELL_Y0; y <= it.pepita.core.world.Layout.CELL_Y0 + it.pepita.core.world.Layout.CELL_FLOORS * it.pepita.core.world.Layout.CELL_FH; y++) {
+                        var info = it.pepita.core.world.CellGeometry.classify(x, y, z);
+                        String d = at(p, x, y, z);
+                        boolean ok = switch (info.kind()) {
+                            case NONE -> true;
+                            case DOOR -> d.startsWith("minecraft:iron_door");
+                            case WINDOW -> d.startsWith("minecraft:iron_bars");
+                            case INTERIOR -> true;
+                            default -> !id(d).equals("air") && !d.startsWith("minecraft:iron_door");
+                        };
+                        if (!ok && bad++ < 10) err("cella non conforme a classify: " + info.kind() + " in " + x + "," + y + "," + z + " = " + d);
+                    }
+                for (int[] pd : it.pepita.core.world.build.ColosseumBuild.elevatorPads())
+                    expect(p, "piastra ascensore", pd[0], pd[1], pd[2], "minecraft:light_weighted_pressure_plate");
+                double[] s = it.pepita.core.world.Layout.CELLS_SPAWN;
+                airBox(p, "spawn arena", (int) Math.floor(s[0]), 81, (int) Math.floor(s[2]), (int) Math.floor(s[0]), 83, (int) Math.floor(s[2]));
+                int top = Integer.MIN_VALUE;
+                final int[] mx = {Integer.MIN_VALUE};
+                p.forEach((k, d) -> mx[0] = Math.max(mx[0], BuildPlan.ky(k)));
+                if (mx[0] > it.pepita.core.world.Layout.COLOSSEUM_TOP) err("il colosseo supera COLOSSEUM_TOP: " + mx[0]);
+            }
+            default -> {
+            }
+        }
+        System.out.println(errors == 0 ? "contratti: OK" : "contratti: " + errors + " problemi");
+    }
+
+    static void radius(BuildPlan p, int max, int cx, int cz) {
+        final double[] worst = {0};
+        p.forEach((k, d) -> worst[0] = Math.max(worst[0], Math.hypot(BuildPlan.kx(k) - cx, BuildPlan.kz(k) - cz)));
+        if (worst[0] > max + 0.5) err("raggio " + String.format("%.1f", worst[0]) + " oltre il massimo " + max);
     }
 
     static void stats(BuildPlan p) {
