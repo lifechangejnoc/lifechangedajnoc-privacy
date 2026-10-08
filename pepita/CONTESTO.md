@@ -34,12 +34,16 @@ in modo semplice cosa deve fare lui sul pannello del server.
   4. `a2d21a0` Skin add-on: la corazza ha una skin per pezzo che potenzia il pezzo
   5. `71349b2` Lobby separata dal Prison e supporto alle mappe esterne per la lobby
   6. `2822f65` Lobby: installazione della mappa più tollerante e con ripristino
+  7. `CONTESTO.md` e poi la rete Velocity (PepitaLobby, modalità rete di PepitaCore, `rete/`, `RETE.md`): vedi `git log`
 
 ### Struttura di `pepita/`
 
 | Percorso | Cosa contiene |
 |---|---|
 | `plugin/` | Il plugin Maven (`pom.xml`, sorgenti in `src/main/java/it/pepita/core`, `config.yml`, `plugin.yml`) |
+| `lobby/` | Il plugin PepitaLobby per il server Lobby della rete (`it.pepita.lobby`) |
+| `rete/` | Modelli di configurazione della rete: `proxy/velocity.toml`, `lobby/`, `prison/` |
+| `RETE.md` | Guida per l'utente: installazione della rete proxy + Lobby + Prison |
 | `consegna/PepitaCore.jar` | Ultimo jar compilato, quello dato all'utente |
 | `LEGGIMI.txt` | Istruzioni per l'utente: installazione su Falix, lobby, comandi giocatori e staff |
 | `ECONOMIA.md` | Architettura economica con formule e tabelle |
@@ -190,9 +194,29 @@ Implementazione (`lobby/Lobby.java`):
   (https://www.patreon.com/posts/license-usage-70505678). Il server ha un negozio di gemme, quindi
   l'utente deve verificare i termini. Non mettere la mappa su GitHub né dentro il jar.
 
+## 7b. Rete Velocity (dal 8 ottobre 2026)
+
+L'utente passa a un hosting nuovo ("gamehosting") e vuole **server separati**. Fatto:
+- **Proxy Velocity 3.6.0** (prima versione con i client 26.2, protocollo 776): modello in `rete/proxy/velocity.toml`
+  (`player-info-forwarding-mode = "MODERN"`, server `lobby` e `prison`, `try = ["lobby"]`,
+  `bungee-plugin-message-channel = true`). ViaVersion/ViaBackwards vanno sul proxy.
+- **Server Lobby**: Paper 26.2 con il nuovo plugin **PepitaLobby** (`pepita/lobby/`, jar `PepitaLobby.jar`).
+  La mappa Meridian è il mondo principale (`lobby-mondo.zip` → cartella `world`, aggiornata da Paper all'avvio).
+  Bussola "Modalità" (menu con le modalità di `config.yml → modalita`, per ora `prison`), NPC per modalità,
+  scoreboard/TAB con i giocatori per server (sottocanale `PlayerCount` del canale `BungeeCord`), chat propria,
+  protezioni totali, `/lobby`, `/modalita`, `/prigione`, `/fly`, staff `/pepitalobby spawn|npc|info|reload`.
+  Il passaggio a un altro server usa il sottocanale `Connect`.
+- **Server Prison**: PepitaCore con **`rete.attiva: true`**: niente mondo `pepita_hub`, all'ingresso si va al cortile
+  (tutorial al primo ingresso), `/lobby` e `/hub` (e la voce Lobby del selettore) mandano al server `rete.server-lobby`
+  con `PepitaCore#connect`. Con `rete.attiva: false` resta tutto come prima (server unico con la lobby nel mondo hub).
+- Backend: `online-mode=false` e `config/paper-global.yml → proxies.velocity.enabled: true` con il segreto di
+  `forwarding.secret` (modelli in `rete/lobby` e `rete/prison`). Guida completa per l'utente: `RETE.md`.
+- Ancora da fare in futuro: gradi condivisi (LuckPerms + MySQL), chat globale, gemme in un database comune.
+
 ## 8. Stato attuale e cose aperte
 
-1. **Problema aperto**: l'utente dice "la lobby è rimasta la stessa" dopo aver provato a installare la
+0. **Rete appena consegnata, non ancora installata**: seguire `RETE.md` con l'utente sull'hosting nuovo.
+1. **(Solo server unico)** l'utente diceva "la lobby è rimasta la stessa" dopo aver provato a installare la
    mappa. Cause probabili: jar vecchio ancora caricato (o due jar), zip non in `plugins/PepitaCore/mappe/`,
    nome diverso, zip estratto da Falix, `/reload` invece del riavvio. Il commit `2822f65` rende il
    rilevamento tollerante e scrive sempre in console righe `[PepitaCore] Lobby: …`. **Bisogna farsi

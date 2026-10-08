@@ -467,6 +467,11 @@ public final class Commands implements TabExecutor {
                 Txt.send(s, "Render salvato in " + out.getPath());
             }
             case "lobby" -> {
+                if (plugin.network()) {
+                    Txt.send(s, "In rete la lobby è il server <white>" + plugin.getConfig().getString("rete.server-lobby", "lobby")
+                            + "</white> (plugin PepitaLobby): spawn e NPC si impostano lì con <yellow>/pepitalobby</yellow>.");
+                    return true;
+                }
                 String what = a.length > 1 ? a[1].toLowerCase(Locale.ROOT) : "info";
                 it.pepita.core.world.LobbyMap lm = plugin.world().lobbyMap();
                 if (what.equals("spawn") || what.equals("npc")) {

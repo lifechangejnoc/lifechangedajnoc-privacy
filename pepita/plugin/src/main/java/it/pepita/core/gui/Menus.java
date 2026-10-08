@@ -210,10 +210,7 @@ public final class Menus {
     public void travel(Player p, String dest) {
         PlayerData d = plugin.data().get(p);
         switch (dest) {
-            case "hub" -> {
-                p.teleport(plugin.world().hubSpawn());
-                p.sendActionBar(Txt.mm("<gradient:#FFE259:#FFA751>Lobby di Pepita"));
-            }
+            case "hub" -> plugin.toLobby(p);
             case "prigione" -> {
                 p.teleport(plugin.world().prisonSpawn());
                 p.sendActionBar(Txt.mm("<#C9C9C9>La Prigione"));

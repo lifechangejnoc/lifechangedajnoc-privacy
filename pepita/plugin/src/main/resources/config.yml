@@ -30,7 +30,14 @@ mondi:
     pepita_pvp: false
     pepita_celle: false
 
-# La lobby (mondo pepita_hub) è separata dalle modalità: inventario a parte con la sola bussola delle modalità,
+# Rete Velocity (proxy + server Lobby + server Prison): vedi RETE.md.
+rete:
+  # true = questo server è solo il Prison: niente mondo della lobby, /lobby e /hub mandano al server della lobby
+  attiva: false
+  # Nome del server della lobby in velocity.toml
+  server-lobby: "lobby"
+
+# Server unico (rete.attiva: false): la lobby è il mondo pepita_hub, separato dalle modalità: inventario a parte con la sola bussola delle modalità,
 # scoreboard e tab suoi, niente del Prison. Dal Prison si torna qui con /lobby o /hub.
 lobby:
   # Mappa esterna per la lobby: uno zip con un mondo Minecraft (cartella con level.dat e region) da mettere in

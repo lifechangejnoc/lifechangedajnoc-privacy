@@ -79,13 +79,25 @@ public final class WorldService {
         return lobbyMap;
     }
 
+    /** I mondi di questo server: in rete la lobby è un server a parte, quindi niente pepita_hub. */
+    public List<String> names() {
+        if (!plugin.network()) return WORLDS;
+        List<String> l = new ArrayList<>(WORLDS);
+        l.remove(W_HUB);
+        return l;
+    }
+
     public void load() {
-        // una mappa nuova per la lobby va installata prima di creare il mondo
-        lobbyMap.prepare(() -> create(W_HUB));
-        for (String n : WORLDS) worlds.put(n, create(n));
-        lobbyMap.afterLoad(hub());
-        double[] ls = lobbyMap.spawn();
-        keepLoaded(hub(), (int) Math.floor(ls[0]), (int) Math.floor(ls[2]) - 8, 3);
+        if (!plugin.network()) {
+            // una mappa nuova per la lobby va installata prima di creare il mondo
+            lobbyMap.prepare(() -> create(W_HUB));
+        }
+        for (String n : names()) worlds.put(n, create(n));
+        if (hub() != null) {
+            lobbyMap.afterLoad(hub());
+            double[] ls = lobbyMap.spawn();
+            keepLoaded(hub(), (int) Math.floor(ls[0]), (int) Math.floor(ls[2]) - 8, 3);
+        }
         keepLoaded(prison(), 0, 0, 3);
         keepLoaded(pvp(), 0, 0, 3);
         keepLoaded(cells(), 0, 0, 2);
@@ -186,10 +198,11 @@ public final class WorldService {
         return new Location(w, a[0], a[1], a[2], (float) a[3], 0);
     }
 
-    public Location hubSpawn() { return loc(hub(), lobbyMap.spawn()); }
+    /** Spawn della lobby; in rete (niente mondo della lobby su questo server) il cortile della prigione. */
+    public Location hubSpawn() { return hub() == null ? prisonSpawn() : loc(hub(), lobbyMap.spawn()); }
 
     /** Dove sta il secondino della modalità Prison nella lobby. */
-    public Location hubNpc() { return loc(hub(), lobbyMap.npc()); }
+    public Location hubNpc() { return hub() == null ? prisonSpawn() : loc(hub(), lobbyMap.npc()); }
 
     /** Sotto questa altezza si torna allo spawn del mondo. */
     public int voidY(World w) { return isHub(w) ? lobbyMap.voidY() : 40; }
@@ -267,7 +280,7 @@ public final class WorldService {
     public void buildMissing(Runnable done) {
         boolean oldPrison = migrateOldPrison;
         List<String> todo = new ArrayList<>();
-        for (String w : WORLDS) if (!built(w) && !(w.equals(W_HUB) && lobbyMap.active())) todo.add(w);
+        for (String w : names()) if (!built(w) && !(w.equals(W_HUB) && lobbyMap.active())) todo.add(w);
         if (todo.isEmpty()) {
             if (done != null) done.run();
             return;
@@ -290,14 +303,15 @@ public final class WorldService {
     public boolean rebuild(String which, Runnable done) {
         which = which.toLowerCase(Locale.ROOT);
         List<String> list = new ArrayList<>();
-        if (which.equals("tutti") || which.equals("all")) list.addAll(WORLDS);
+        if (which.equals("tutti") || which.equals("all")) list.addAll(names());
         else {
             String w = alias(which);
             if (w == null) return false;
             list.add(w);
         }
         // la lobby con una mappa esterna non si ricostruisce: la cambierebbe con quella del plugin
-        if (lobbyMap.active() && list.remove(W_HUB)) plugin.getLogger().info("La lobby usa una mappa esterna: non viene ricostruita.");
+        if ((lobbyMap.active() || plugin.network()) && list.remove(W_HUB))
+            plugin.getLogger().info(plugin.network() ? "In rete la lobby è un server a parte: qui non c'è." : "La lobby usa una mappa esterna: non viene ricostruita.");
         if (list.isEmpty()) {
             if (done != null) done.run();
             return true;

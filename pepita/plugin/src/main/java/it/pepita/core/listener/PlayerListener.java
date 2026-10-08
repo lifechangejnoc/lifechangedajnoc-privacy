@@ -96,10 +96,18 @@ public final class PlayerListener implements Listener {
             if (first) {
                 Txt.raw(p, "");
                 Txt.raw(p, "<gradient:#FFE259:#FFA751><b>━━━━━━━━ BENVENUTO SU PEPITA ━━━━━━━━</b></gradient>");
-                Txt.raw(p, "<gray>Sei nella <white>lobby</white>. Tasto destro con la <yellow>bussola</yellow> per scegliere la modalità,");
-                Txt.raw(p, "<gray>oppure entra nel portale o parla con il secondino del <gold>Prison</gold>.");
+                if (plugin.network()) {
+                    // in rete si arriva qui dalla lobby: questo server è già il Prison
+                    Txt.raw(p, "<gray>Sei un detenuto: <white>scava</white>, guadagna e scala i rank da <white>A</white> a <gold>Z</gold>.");
+                    Txt.raw(p, "<gray>Parla con <gold>Beppe il Secondino</gold> qui accanto: ti guida passo passo.");
+                    Txt.raw(p, "<gray>Hai ricevuto <white>3 chiavi Comuni</white>: aprile in <yellow>/casse</yellow>. Per tornare alla lobby: <yellow>/lobby</yellow>.");
+                } else {
+                    Txt.raw(p, "<gray>Sei nella <white>lobby</white>. Tasto destro con la <yellow>bussola</yellow> per scegliere la modalità,");
+                    Txt.raw(p, "<gray>oppure entra nel portale o parla con il secondino del <gold>Prison</gold>.");
+                }
                 Txt.raw(p, "");
             }
+            if (first && plugin.network() && plugin.getConfig().getBoolean("tutorial.automatico", true)) plugin.tutorial().start(p);
             if (plugin.lobby().in(p)) return;
             if (d.skinDeposito.size() > 0)
                 Txt.send(p, "Hai <white>" + d.skinDeposito.size() + "</white> skin nel deposito: ritirale da <yellow>/skin</yellow>.");

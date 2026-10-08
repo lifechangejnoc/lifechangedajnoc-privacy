@@ -1,0 +1,34 @@
+name: PepitaLobby
+version: '${project.version}'
+main: it.pepita.lobby.PepitaLobby
+api-version: '26.2'
+author: Pepita
+description: La lobby della rete Pepita (bussola delle modalità, NPC, scoreboard, protezioni).
+website: pepitamc.it
+
+commands:
+  lobby:
+    description: Torna allo spawn della lobby
+    aliases: [hub, spawn, l]
+  modalita:
+    description: Menu delle modalità
+    aliases: [selettore, modalità, giochi, play, gioca]
+  prigione:
+    description: Entra nel Prison
+    aliases: [prison, carcere]
+  fly:
+    description: Vola nella lobby
+    aliases: [vola]
+    permission: pepita.fly
+  pepitalobby:
+    description: Comandi staff della lobby
+    aliases: [plobby]
+    permission: pepita.admin
+
+permissions:
+  pepita.admin:
+    description: Comandi staff della lobby e costruzione
+    default: op
+  pepita.fly:
+    description: Volo nella lobby
+    default: op

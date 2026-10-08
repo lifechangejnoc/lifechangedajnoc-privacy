@@ -1,0 +1,11 @@
+# Da copiare in config/paper-global.yml di QUESTO server, al posto della sezione "proxies" che c'è già.
+# Il segreto è il contenuto del file forwarding.secret del proxy (Velocity lo crea al primo avvio):
+# deve essere identico sul proxy, sulla Lobby e sul Prison.
+proxies:
+  bungee-cord:
+    online-mode: true
+  proxy-protocol: false
+  velocity:
+    enabled: true
+    online-mode: true
+    secret: 'INCOLLA_QUI_IL_CONTENUTO_DI_forwarding.secret'

@@ -91,6 +91,7 @@ public final class Holograms {
 
     private void spawnHub() {
         World w = plugin.world().hub();
+        if (w == null) return; // in rete la lobby è un altro server
         if (plugin.world().lobbyMap().active()) {
             // mappa esterna: niente portali del plugin, solo il benvenuto sopra il secondino del Prison
             Location n = plugin.world().hubNpc();

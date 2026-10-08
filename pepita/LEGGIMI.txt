@@ -16,8 +16,18 @@ Cosa contiene il plugin
 - L'economia è spiegata in ECONOMIA.md (formule, tabelle, come leggere i log).
 
 
-INSTALLAZIONE SU FALIX
-======================
+RETE (proxy Velocity + server Lobby + server Prison)
+====================================================
+Con l'hosting nuovo Pepita diventa una rete di 3 server: tutte le istruzioni sono in RETE.md
+(e i file da copiare nella cartella rete/). In breve:
+  - Proxy: Velocity 3.6.0 con ViaVersion e ViaBackwards, velocity.toml di rete/proxy/.
+  - Lobby: Paper 26.2 con PepitaLobby.jar e la mappa (lobby-mondo.zip → cartella world).
+  - Prison: Paper 26.2 con PepitaCore.jar e in config.yml  rete.attiva: true
+Le istruzioni qui sotto ("server unico") valgono solo se si usa un server solo.
+
+
+INSTALLAZIONE SU FALIX (server unico)
+=====================================
 1. Pannello Falix → Gestione File → cartella plugins/
    Carica: PepitaCore.jar, ViaVersion-5.12.0.jar, ViaBackwards-5.12.0.jar
    (Se c'era già un vecchio PepitaCore.jar, sostituiscilo. NON cancellare la cartella

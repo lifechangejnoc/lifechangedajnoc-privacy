@@ -1,0 +1,73 @@
+# ==========================================================
+#   PEPITA — PepitaLobby: il server della lobby della rete
+#   Si entra qui dal proxy (Velocity): bussola per scegliere la modalità,
+#   niente del Prison. Vedi RETE.md.
+# ==========================================================
+
+server:
+  # Indirizzo mostrato in scoreboard e tab
+  ip-visualizzato: "pepitamc.it"
+
+# Punto di arrivo. "mondo" vuoto = il mondo principale del server (level-name in server.properties).
+# Si imposta anche in gioco: mettiti nel punto, guarda nella direzione giusta e scrivi /pepitalobby spawn
+# (valori per la mappa "Meridian Base": sala sotto la cupola centrale)
+spawn:
+  mondo: ""
+  x: 25.5
+  y: -17
+  z: 24.5
+  yaw: 90
+  pitch: 0
+
+# Sotto questa altezza si torna allo spawn (la Meridian ha il pavimento a y=-34)
+vuoto-y: -60
+
+# Ora del giorno fissa (6000 = mezzogiorno)
+ora: 6000
+
+# Le modalità del menu della bussola. Per aggiungerne una basta copiare il blocco "prison":
+#   server  = nome del server in velocity.toml
+#   slot    = posizione nel menu (3 righe: 0-26, il centro è 13)
+#   npc     = dove sta il personaggio che porta in quella modalità (togli la sezione per non averlo)
+#   pronta  = false mostra la carta come "in arrivo" senza mandare nessuno
+modalita:
+  prison:
+    server: "prison"
+    pronta: true
+    slot: 13
+    nome: "<gradient:#FFE259:#FFA751><b>⛓ PRISON ⛓</b></gradient>"
+    icona: IRON_BARS
+    modello: gui_prigione
+    descrizione:
+      - "<gray>Sei un detenuto: scava, guadagna"
+      - "<gray>e scala i rank da <white>A</white> a <gold>Z</gold>."
+      - "<gray>Miniere, incantesimi, Quantum,"
+      - "<gray>celle e battle pass."
+    npc:
+      x: 21.5
+      y: -17
+      z: 24.5
+      yaw: -90
+      # skin del personaggio presa dal resource pack (vuoto = skin di default)
+      skin: "pepita:entity/npc/guardiano"
+
+# Lo stesso resource pack del Prison (logo, menu, bussola, skin dell'NPC)
+resource-pack:
+  url: "https://download.mc-packs.net/pack/1c7315cd6b37d5a50798c5b0f4fd53bc4b190544.zip"
+  # SHA-1 dello zip (40 caratteri). Lascia "" e lo calcola il plugin scaricando lo zip.
+  sha1: ""
+  obbligatorio: false
+  messaggio: "<gold>Pepita</gold> <gray>usa un resource pack per menu decorati, logo e skin!"
+
+# Blocchi da cambiare all'avvio: "x y z blocco". Nella Meridian ci sono 3 lodestone che col pack di Pepita
+# sembrerebbero nuclei Quantum.
+sostituisci-blocchi:
+  - "37 -32 112 minecraft:chiseled_stone_bricks"
+  - "41 -32 112 minecraft:chiseled_stone_bricks"
+  - "39 -32 114 minecraft:chiseled_stone_bricks"
+
+messaggi:
+  benvenuto: "<gray>Benvenuto su <gradient:#FFE259:#FFA751><b>PEPITA</b></gradient><gray>! Tasto destro con la <yellow>bussola</yellow> per scegliere la modalità."
+  ologramma: "<gradient:#FFE259:#FFA751><b>BENVENUTO SU PEPITA</b></gradient>\n<gray>Usa la <yellow>bussola</yellow> per scegliere la modalità"
+  connessione: "<gray>Ti porto in <white>%modalita%</white>..."
+  in-arrivo: "<gray>Questa modalità è <white>in arrivo</white>!"

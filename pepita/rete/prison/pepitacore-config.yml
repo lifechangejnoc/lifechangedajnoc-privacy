@@ -1,0 +1,4 @@
+# In plugins/PepitaCore/config.yml del server PRISON (il resto della config resta com'è):
+rete:
+  attiva: true
+  server-lobby: "lobby"

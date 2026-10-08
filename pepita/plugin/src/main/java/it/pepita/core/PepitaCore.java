@@ -83,6 +83,36 @@ public final class PepitaCore extends JavaPlugin implements Listener {
     private it.pepita.core.listener.ResourcePackService packs;
 
     public static PepitaCore get() { return instance; }
+
+    /**
+     * Rete Velocity: questo server è solo il Prison, la lobby è un server a parte (plugin PepitaLobby).
+     * Si attiva con rete.attiva: true in config.yml.
+     */
+    public boolean network() { return getConfig().getBoolean("rete.attiva", false); }
+
+    /** Manda un giocatore a un altro server della rete (canale BungeeCord, supportato da Velocity). */
+    public void connect(Player p, String server) {
+        try {
+            java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+            java.io.DataOutputStream out = new java.io.DataOutputStream(b);
+            out.writeUTF("Connect");
+            out.writeUTF(server);
+            p.sendPluginMessage(this, "BungeeCord", b.toByteArray());
+        } catch (java.io.IOException ex) {
+            getLogger().warning("Impossibile mandare " + p.getName() + " al server " + server + ": " + ex.getMessage());
+        }
+    }
+
+    /** Torna alla lobby: in rete va al server della lobby, altrimenti al mondo della lobby. */
+    public void toLobby(Player p) {
+        if (network()) {
+            Txt.send(p, "Torno alla <gold>lobby</gold>...");
+            connect(p, getConfig().getString("rete.server-lobby", "lobby"));
+        } else {
+            p.teleport(world.hubSpawn());
+            p.sendActionBar(Txt.mm("<gradient:#FFE259:#FFA751>Lobby di Pepita"));
+        }
+    }
     public DataManager data() { return data; }
     public Economy eco() { return eco; }
     public RankManager ranks() { return ranks; }
@@ -152,6 +182,7 @@ public final class PepitaCore extends JavaPlugin implements Listener {
         menus = new Menus(this);
         renderer = new Renderer(this);
         packs = new it.pepita.core.listener.ResourcePackService(this);
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 
         var pm = Bukkit.getPluginManager();
         pm.registerEvents(new MenuListener(), this);

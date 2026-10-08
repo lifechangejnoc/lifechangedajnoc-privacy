@@ -1,0 +1,10 @@
+# server.properties del server PRISON: cambia solo queste righe (le altre lasciale come sono)
+online-mode=false
+# la porta è quella che ti dà l'hosting per questo server (va messa anche in velocity.toml)
+server-port=PORTA_DEL_PRISON
+allow-nether=false
+spawn-protection=0
+max-players=200
+view-distance=8
+simulation-distance=6
+motd=Pepita Prison

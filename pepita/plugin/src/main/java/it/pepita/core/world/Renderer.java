@@ -32,7 +32,7 @@ public final class Renderer {
                 x1 = -48; z1 = -48; x2 = 48; z2 = 48; y1 = 76; y2 = 136;
             }
             case "hub" -> {
-                w = plugin.world().hub();
+                w = plugin.world().hub() != null ? plugin.world().hub() : plugin.world().prison();
                 x1 = -60; z1 = -60; x2 = 60; z2 = 60; y1 = 80; y2 = 136;
             }
             case "celle", "colosseo" -> {
