@@ -23,6 +23,7 @@ Con l'hosting nuovo Pepita diventa una rete di 3 server: tutte le istruzioni son
   - Proxy: Velocity 3.6.0 con ViaVersion e ViaBackwards, velocity.toml di rete/proxy/.
   - Lobby: Paper 26.2 con PepitaLobby.jar e la mappa (lobby-mondo.zip → cartella world).
   - Prison: Paper 26.2 con PepitaCore.jar e in config.yml  rete.attiva: true
+Combattimento 1.8.9 (PepitaCombat.jar sul server Prison + PepitaCombat-pack.zip): vedi COMBATTIMENTO.md.
 Le istruzioni qui sotto ("server unico") valgono solo se si usa un server solo.
 
 

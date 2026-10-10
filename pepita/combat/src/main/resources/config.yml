@@ -1,0 +1,106 @@
+# ==========================================================
+#   PEPITA — PepitaCombat: le hit della 1.8.9 sul server 26.2
+#   Va sul server PRISON (dove c'è il PvP). /pepitacombat reload dopo ogni modifica.
+# ==========================================================
+
+# Profilo di knockback in uso: "pepita" (bilanciato, consigliato), "1.8" (identico alla 1.8.9) o "combo"
+# (meno verticale, colpi più ravvicinati: combo lunghe). Puoi crearne altri copiando un blocco.
+profilo: pepita
+
+profili:
+  "1.8":
+    # spinta orizzontale e verticale di un colpo normale
+    orizzontale: 0.40
+    verticale: 0.40
+    # la spinta verticale non va oltre questo valore
+    limite-verticale: 0.40
+    # spinta in più se chi colpisce corre (o per livello di Contraccolpo)
+    sprint-orizzontale: 0.50
+    sprint-verticale: 0.10
+    # la velocità che il colpito aveva viene divisa per questo numero prima di aggiungere la spinta
+    attrito: 2.0
+    # tick di invulnerabilità dopo un colpo (20 = come in 1.8: si può colpire di nuovo dopo mezzo secondo)
+    ritardo-colpi: 20
+  pepita:
+    orizzontale: 0.38
+    verticale: 0.36
+    limite-verticale: 0.38
+    sprint-orizzontale: 0.46
+    sprint-verticale: 0.085
+    attrito: 2.0
+    ritardo-colpi: 19
+  combo:
+    orizzontale: 0.34
+    verticale: 0.31
+    limite-verticale: 0.33
+    sprint-orizzontale: 0.42
+    sprint-verticale: 0.07
+    attrito: 2.0
+    ritardo-colpi: 16
+
+# Niente tempo di ricarica dell'attacco: si colpisce a ogni click come in 1.8 (4 = valore della 26.2)
+velocita-attacco: 1024
+
+# Colpo a spazzata della spada (introdotto in 1.9): false = nessun danno e nessuna spinta agli altri vicini
+spazzata: false
+
+# Danni delle armi come in 1.8 (cuori × 2). Gli oggetti non elencati fanno il danno della 26.2.
+danni-1.8:
+  attivi: true
+  pugno: 1.0
+  armi:
+    WOODEN_SWORD: 5
+    GOLDEN_SWORD: 5
+    STONE_SWORD: 6
+    IRON_SWORD: 7
+    DIAMOND_SWORD: 8
+    NETHERITE_SWORD: 9
+    WOODEN_AXE: 4
+    GOLDEN_AXE: 4
+    STONE_AXE: 5
+    IRON_AXE: 6
+    DIAMOND_AXE: 7
+    NETHERITE_AXE: 8
+    WOODEN_PICKAXE: 3
+    GOLDEN_PICKAXE: 3
+    STONE_PICKAXE: 4
+    IRON_PICKAXE: 5
+    DIAMOND_PICKAXE: 6
+    NETHERITE_PICKAXE: 7
+    WOODEN_SHOVEL: 2
+    GOLDEN_SHOVEL: 2
+    STONE_SHOVEL: 3
+    IRON_SHOVEL: 4
+    DIAMOND_SHOVEL: 5
+    NETHERITE_SHOVEL: 6
+  # danno in più per livello di Affilatezza (1.8: 1.25; 26.2: 0.5 per livello + 0.5)
+  affilatezza: 1.25
+  # danno in più per livello di Forza (26.2: 3; la 1.8 dava +130% ed era sbilanciata)
+  forza: 3.0
+  # danno in meno per livello di Debolezza
+  debolezza: 4.0
+
+# Critici come in 1.8: valgono anche correndo (in 26.2 se corri non fai critici). Danno × moltiplicatore.
+critici-1.8:
+  attivi: true
+  moltiplicatore: 1.5
+
+# Parata con la spada come in 1.8: tasto destro con la spada = posa della parata e danno ridotto.
+# danno preso = (danno + 1) × 0.5, come in 1.8. La spada non si consuma parando.
+parata-spada: true
+
+# Scudi (non esistevano in 1.8): false = non si possono usare
+scudi: false
+
+# Canna da pesca come in 1.8: se l'amo colpisce un giocatore lo spinge (e conta come colpo per le combo)
+canna-da-pesca: true
+
+# Resource pack della 1.8 per i suoni: toglie i suoni nuovi degli attacchi (colpo forte/debole, spazzata,
+# critico, contraccolpo, colpo a vuoto), la spazzata e i cuori scuri dei danni. È il file PepitaCombat-pack.zip:
+# caricalo su mc-packs.net e incolla qui il link DIRETTO. Si aggiunge al pack di Pepita, non lo sostituisce.
+resource-pack:
+  url: ""
+  # SHA-1 dello zip (40 caratteri). Lascia "" e lo calcola il plugin scaricando lo zip.
+  sha1: ""
+  obbligatorio: false
+  messaggio: "<gold>Pepita</gold> <gray>usa i suoni dei colpi della 1.8!"

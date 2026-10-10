@@ -3,3 +3,4 @@ tools/bin/
 tools/out/
 resourcepack/__pycache__/
 lobby/target/
+combat/target/

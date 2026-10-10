@@ -44,6 +44,8 @@ in modo semplice cosa deve fare lui sul pannello del server.
 | `lobby/` | Il plugin PepitaLobby per il server Lobby della rete (`it.pepita.lobby`) |
 | `rete/` | Modelli di configurazione della rete: `proxy/velocity.toml`, `lobby/`, `prison/` |
 | `RETE.md` | Guida per l'utente: installazione della rete proxy + Lobby + Prison |
+| `combat/` | Il plugin PepitaCombat (combattimento 1.8.9) e `combat/pack/`, il mini resource pack dei suoni |
+| `COMBATTIMENTO.md` | Guida per l'utente del combattimento 1.8 |
 | `consegna/PepitaCore.jar` | Ultimo jar compilato, quello dato all'utente |
 | `LEGGIMI.txt` | Istruzioni per l'utente: installazione su Falix, lobby, comandi giocatori e staff |
 | `ECONOMIA.md` | Architettura economica con formule e tabelle |
@@ -212,6 +214,18 @@ L'utente passa a un hosting nuovo ("gamehosting") e vuole **server separati**. F
 - Backend: `online-mode=false` e `config/paper-global.yml → proxies.velocity.enabled: true` con il segreto di
   `forwarding.secret` (modelli in `rete/lobby` e `rete/prison`). Guida completa per l'utente: `RETE.md`.
 - Ancora da fare in futuro: gradi condivisi (LuckPerms + MySQL), chat globale, gemme in un database comune.
+
+## 7c. Combattimento 1.8.9 (plugin PepitaCombat, dal 10 ottobre 2026)
+
+L'utente vuole le hit della 1.8.9 sul server 26.2. Plugin `pepita/combat` → `PepitaCombat.jar`, va sul server Prison:
+attack_speed base 1024 (niente cooldown, rimesso a 4 all'uscita), knockback 1.8 calcolato in
+`EntityDamageByEntityEvent` (MONITOR) e applicato in `PlayerVelocityEvent`, profili `pepita`/`1.8`/`combo` con
+`maximumNoDamageTicks`, danni/Affilatezza/critici 1.8 (`setDamage`), spazzata annullata (danno e
+`EntityKnockbackEvent` SWEEP_ATTACK), parata con la spada via componente `blocks_attacks` (danno (d+1)/2, niente
+consumo), scudi disattivati, canna da pesca 1.8 (`damage(0.01, shooter)`). I suoni nuovi degli attacchi sono
+lato client: `PepitaCombat-pack.zip` (in `consegna/`, sorgenti in `combat/pack/`) li azzera con `sounds.json` e rende
+invisibili `sweep_attack` e `damage_indicator`; il plugin lo manda con `replace(false)` 2 secondi dopo l'ingresso,
+sopra il pack di Pepita. Guida: `COMBATTIMENTO.md`.
 
 ## 8. Stato attuale e cose aperte
 

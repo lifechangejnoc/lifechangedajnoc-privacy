@@ -1,0 +1,19 @@
+name: PepitaCombat
+version: '${project.version}'
+main: it.pepita.combat.PepitaCombat
+api-version: '26.2'
+author: Pepita
+description: Le hit della 1.8.9 sul server 26.2 (niente cooldown, knockback e combo 1.8, danni e critici 1.8, parata con la spada).
+website: pepitamc.it
+softdepend: [PepitaCore]
+
+commands:
+  pepitacombat:
+    description: Comandi staff del combattimento 1.8
+    aliases: [pcombat, combat18]
+    permission: pepita.admin
+
+permissions:
+  pepita.admin:
+    description: Comandi staff
+    default: op

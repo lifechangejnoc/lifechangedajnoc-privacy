@@ -1,0 +1,26 @@
+{
+  "entity.player.attack.strong": {
+    "replace": true,
+    "sounds": []
+  },
+  "entity.player.attack.weak": {
+    "replace": true,
+    "sounds": []
+  },
+  "entity.player.attack.nodamage": {
+    "replace": true,
+    "sounds": []
+  },
+  "entity.player.attack.crit": {
+    "replace": true,
+    "sounds": []
+  },
+  "entity.player.attack.knockback": {
+    "replace": true,
+    "sounds": []
+  },
+  "entity.player.attack.sweep": {
+    "replace": true,
+    "sounds": []
+  }
+}
